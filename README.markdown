@@ -29,6 +29,7 @@ Please note that I have just learned JavaScript/CoffeeScript for a few weeks, th
 All public methods return the component for chaining.
 
 Usage:
+
     box = Crafty.e("Box2D")
           .attr({x:1, y:1})
           .rectangle(0.5, 0.5)

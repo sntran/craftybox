@@ -6,6 +6,42 @@ b2AABB = Box2D.Collision.b2AABB
 SCALE = 30
 
 exports.init = ->
+	Crafty.c "Box2DWorld",
+		_gravity: new b2Vec2(0, 10)
+		_sleeping: true
+		_world: null
+		init: ->
+			@requires "Canvas"
+
+			if Crafty.support.setter
+				@__defineSetter__('gravity', (v)->@_gravity = v)
+				@__defineSetter__('sleeping', (v)->@_sleeping = v)
+
+				@__defineGetter__('gravity', ()->@_gravity)
+				@__defineGetter__('sleeping', ()->@_sleeping)
+				@__defineGetter__('world', ()->@_world)
+
+			@_world = new b2World(@gravity, @sleeping)
+			@_setDebugDraw()
+
+			@bind "EnterFrame", (e) ->
+				@world.Step(1/60, 10, 10)
+				@world.DrawDebugData()
+				@world.ClearForces()
+
+		create: (box2DEntity) ->
+			@world.CreateBody(box2DEntity.body)
+				.CreateFixture(box2DEntity.fixture)
+
+		_setDebugDraw: ->
+			debugDraw = new b2DebugDraw()
+			debugDraw.SetSprite(Crafty.canvas.context)
+			debugDraw.SetDrawScale(SCALE)
+			debugDraw.SetFillAlpha(0.3)
+			debugDraw.SetLineThickness(1.0)
+			debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit)
+			@world.SetDebugDraw(debugDraw)
+
 	Crafty.c "Box2D",
 		### 
 		Fixture Definition defines the attributes of the object,
@@ -21,8 +57,6 @@ exports.init = ->
 		_bodyDef: null
 
 		init: ->
-			@requires "Canvas"
-			
 			@_fixDef = new b2FixtureDef
 			@_bodyDef = new b2BodyDef
 
@@ -50,10 +84,8 @@ exports.init = ->
 			@density = 1.0
 			@friction = 0.5
 			@restitution = 0.1
-			@dynamic = false
 
 		rectangle: (halfWidth, halfLength) ->
-			@dynamic = false
 			@shape = new b2PolygonShape
 			@shape.SetAsBox(halfWidth, halfLength)
 			@
@@ -63,8 +95,7 @@ exports.init = ->
 				poly = Array.prototype.slice.call(arguments, 0)
 
 			@points = @_toBox2DPoly(poly)
-				
-			@dynamic = false
+
 			@shape = new b2PolygonShape
 			@shape.SetAsArray(@points, @points.length)
 			@
