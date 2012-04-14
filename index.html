@@ -6,14 +6,20 @@
 	 
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 
-	<script src="lib/1.jquery.min"></script>
+	<script src="lib/1.jquery.min.js"></script>
 	<script src="lib/2.jquery.tmpl.min.js"></script>
 	<script src="lib/3.coffee.script.js"></script>
 	<script src="lib/4.crafty.js"></script>
 	<script src="lib/5.box2d.min.js"></script>
-	<script type="text/coffeescript" src="craftybox.coffee"></script>
+	<script src="craftybox.js"></script>
 </head>
 <body>
-	
+
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+	var box = Crafty.e("Box2D").attr({x:300, y:300});
+}
+</script>
 </body>
 </html>

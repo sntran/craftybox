@@ -8,28 +8,18 @@ The components are written in [CoffeeScript](http://jashkenas.github.com/coffee-
 
 Please note that I have just learned JavaScript/CoffeeScript for a few weeks, thus my codes are definitely full of bugs. Please help me improve them.
 
-## Components:
+## Changelogs:
 
-### Component "Box2D"
-- Public attributes
- - b2Body body
- - b2Fixture fixture
- - b2PolygonShape shape
- - Number x
- - Number y
- - Boolean dynamic - indicates whether body type is dynamic or not
- - Number density
- - Number friction
- - Number restitution
-- Public methods
- - rectangle (Number halfWidth, Number halfLength)
- - polygon (Object vertex1, Object vertex2, ...)
- - polygon (Object vertices)
+### 04/13/2012
 
-All public methods return the component for chaining.
+* Rewrote from scratch.
+* Updated Crafty to v0.4.7.
+* Updated Coffee-Script compiler to v1.3.1.
+* Removed Box2DWorld component.
+* Extended Crafty with a Box2D property to act as the world.
 
-Usage:
+## To Do:
 
-    box = Crafty.e("Box2D")
-          .attr({x:1, y:1})
-          .rectangle(0.5, 0.5)
+* Link between Crafty's 2D attributes and Box2D attributes
+* Make objects move and rotate
+* Collision
