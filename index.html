@@ -18,7 +18,24 @@
 <script>
 window.onload = function() {
 	Crafty.init(800, 600);
-	var box = Crafty.e("Box2D").attr({x:300, y:300});
+	Crafty.Box2D.debug = true;
+	// Create ground
+	Crafty.e("Box2D").attr({x:9*30, y:13*30, w: 10*2*30, h: 0.5*2*30});
+
+	for(var i = 0; i < 10; ++i) {
+		var x = (Math.random() * 10)*30;
+		var y = (Math.random() * 10)*30;
+
+		if(Math.random() > 0.5) {
+			var hW = (Math.random() + 0.1)*30;
+			var hH = (Math.random() + 0.1)*30;
+			Crafty.e("Box2D").attr({x:x, y:y, w: hW*2, h: hH*2, dynamic: true});
+		} else {
+			var r = (Math.random() + 0.1)*30;
+			Crafty.e("Box2D").attr({x:x, y:y, r:r, dynamic: true});
+		}
+	}
+
 }
 </script>
 </body>

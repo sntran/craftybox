@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<link rel="stylesheet" type="text/css" href="css/mocha.css">
+	<script src="lib/1.jquery.min.js"></script>
+	<script src="lib/chai.js"></script>
+	<script src="lib/mocha.js"></script>
+	<script>mocha.setup({ui: 'bdd', ignoreLeaks: true})</script>
+	<script src="lib/4.crafty.js"></script>
+	<script src="lib/5.box2d.min.js"></script>
+	<script src="test/test.craftybox.js"></script>
+	<script src="craftybox.js"></script>
+	<script>
+    $(function(){
+    	Crafty.init(800, 600);
+      mocha.run()
+    })
+  </script>
+</head>
+<body>
+  <div id="mocha"></div>
+</body>
+</html>

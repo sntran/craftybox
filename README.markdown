@@ -10,7 +10,16 @@ Please note that I have just learned JavaScript/CoffeeScript for a few weeks, th
 
 ## Changelogs:
 
-### 04/13/2012
+### v0.0.2
+
+* Changed the changelog version format :)
+* Started writing tests
+* Parameters for SetAsBox should be half width, half height
+* Can create circle by `.attr({x, y, r})`
+* Can specify dynamic body by `.attr({x, y, r, dynamic:true})`
+* Added the standard example from Box2D
+
+### v0.0.1
 
 * Rewrote from scratch.
 * Updated Crafty to v0.4.7.

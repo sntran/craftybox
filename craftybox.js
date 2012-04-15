@@ -26,17 +26,18 @@
       /*
           # #Crafty.Box2D.init
           # @comp Crafty.Box2D
-          # @sign public void Crafty.Box2D.init(void)
+          # @sign public void Crafty.Box2D.init(params)
+          # @param options: An object contain settings for the world
           # Create a Box2D world. Must be called before any entities
           # with the Box2D component can be created
       */
-      init: function(gravityX, gravityY, SCALE, doSleep) {
-        var AABB, canvas, debugDraw,
+      init: function(options) {
+        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7,
           _this = this;
-        if (gravityX == null) gravityX = 0;
-        if (gravityY == null) gravityY = 10;
-        this.SCALE = SCALE != null ? SCALE : 30;
-        if (doSleep == null) doSleep = true;
+        gravityX = (_ref4 = options != null ? options.gravityX : void 0) != null ? _ref4 : 0;
+        gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 10;
+        this.SCALE = (_ref6 = options != null ? options.scale : void 0) != null ? _ref6 : 30;
+        doSleep = (_ref7 = options != null ? options.doSleep : void 0) != null ? _ref7 : true;
         /*
               # The world AABB should always be bigger then the region 
               # where your bodies are located. It is better to make the
@@ -46,7 +47,7 @@
         AABB = new b2AABB;
         AABB.lowerBound.Set(-100.0, -100.0);
         AABB.upperBound.Set(Crafty.viewport.width + 100.0, Crafty.viewport.height + 100.0);
-        this.world = new b2World(AABB, new b2Vec2(gravityX, gravityY), doSleep);
+        this.world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
         Crafty.bind("EnterFrame", function() {
           _this.world.Step(1 / 60, 10, 10);
           if (_this.debug) _this.world.DrawDebugData();
@@ -67,8 +68,7 @@
           debugDraw.SetFillAlpha(0.7);
           debugDraw.SetLineThickness(1.0);
           debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit);
-          this.world.SetDebugDraw(debugDraw);
-          return this.debug = true;
+          return this.world.SetDebugDraw(debugDraw);
         }
       }
     }
@@ -82,25 +82,45 @@
   # In order to create a Box2D object, a body definition of position and dynamic is need.
   # The world will use this bodyDef to create a body. A fixture definition with geometry,
   # friction, density, etc is also required. Then create shapes on the body.
+  # The body will be created during the .attr call instead of init.
   */
 
   Crafty.c("Box2D", {
     body: null,
     init: function() {
-      var bodyDef, fixDef;
-      this.requires("2D");
+      var SCALE,
+        _this = this;
+      this.addComponent("2D");
       if (!(Crafty.Box2D.world != null)) Crafty.Box2D.init();
-      bodyDef = new b2BodyDef;
-      bodyDef.type = b2Body.b2_staticBody;
-      bodyDef.position.Set(this._x / Crafty.Box2D.SCALE, this._y / Crafty.Box2D.SCALE);
-      this.body = Crafty.Box2D.world.CreateBody(bodyDef);
-      fixDef = new b2FixtureDef;
-      fixDef.shape = new b2PolygonShape;
-      fixDef.density = 1.0;
-      fixDef.friction = 0.5;
-      fixDef.restitution = 0.1;
-      fixDef.shape.SetAsBox(10.0, 10.0);
-      this.body.CreateFixture(fixDef);
+      SCALE = Crafty.Box2D.SCALE;
+      /*
+          Box2D entity is created by calling .attr({x, y, w, h}) or .attr({x, y, r}).
+          That funnction triggers "Change" event for us to set box2d attributes.
+      */
+      this.bind("Change", function(attrs) {
+        var bodyDef, fixDef, _ref4, _ref5, _ref6, _ref7, _ref8;
+        if ((attrs.x != null) && (attrs.y != null)) {
+          bodyDef = new b2BodyDef;
+          bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
+          bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
+          _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+          fixDef = new b2FixtureDef;
+          fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
+          fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
+          fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
+          if ((attrs.w != null) || (attrs.h != null)) {
+            attrs.w = (_ref7 = attrs.w) != null ? _ref7 : attrs.h;
+            attrs.h = (_ref8 = attrs.h) != null ? _ref8 : attrs.w;
+            fixDef.shape = new b2PolygonShape;
+            fixDef.shape.SetAsBox(attrs.w / SCALE / 2, attrs.h / SCALE / 2);
+            _this.body.CreateFixture(fixDef);
+          }
+          if (attrs.r != null) {
+            fixDef.shape = new b2CircleShape(attrs.r / SCALE);
+            return _this.body.CreateFixture(fixDef);
+          }
+        }
+      });
       return this;
     }
   });
