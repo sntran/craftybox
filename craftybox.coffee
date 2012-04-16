@@ -14,8 +14,17 @@ Crafty.extend
     # @comp Crafty.Box2D
     # This will return the Box2D world object,
     # which is a container for bodies and joints.
+    # It will have 0 gravity when initialized.
+    # Gravity can be set through a setter:
+    # Crafty.Box2D.gravity = {x: 0, y:10}
     ###
     world: null
+
+    ###
+    # #Crafty.Box2D.debug
+    # @comp Crafty.Box2D
+    # This will determine whether to use Box2D's own debug Draw
+    ###
     debug: false
 
     ###
@@ -28,7 +37,7 @@ Crafty.extend
     ###
     init: (options) ->
       gravityX = options?.gravityX ? 0
-      gravityY = options?.gravityY ? 10
+      gravityY = options?.gravityY ? 0
       @SCALE = options?.scale ? 30
       doSleep = options?.doSleep ? true
 
@@ -41,13 +50,15 @@ Crafty.extend
       AABB = new b2AABB
       AABB.lowerBound.Set -100.0, -100.0
       AABB.upperBound.Set Crafty.viewport.width+100.0, Crafty.viewport.height+100.0
-      @world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
+      _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
 
-      Crafty.bind "EnterFrame", =>
+      @__defineSetter__('gravity', (v) -> _world.SetGravity(new b2Vec2(v.x, v.y)))
+
+      Crafty.bind "EnterFrame", ->
         # TODO: Integrate Step with Crafty rendering framerate
-        @world.Step(1/60, 10, 10)
-        @world.DrawDebugData() if @debug
-        @world.ClearForces()
+        _world.Step(1/60, 10, 10)
+        _world.DrawDebugData() if @debug
+        _world.ClearForces()
 
       # Setting up debug draw. Setting @debug outside will trigger drawing
       if Crafty.support.canvas
@@ -67,7 +78,9 @@ Crafty.extend
         debugDraw.SetFillAlpha 0.7
         debugDraw.SetLineThickness 1.0
         debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit)
-        @world.SetDebugDraw debugDraw
+        _world.SetDebugDraw debugDraw
+
+      @world = _world
 
 
 ###
@@ -93,7 +106,7 @@ Crafty.c "Box2D",
     That funnction triggers "Change" event for us to set box2d attributes.
     ###
     @bind "Change", (attrs) =>
-      if attrs.x? and attrs.y?
+      if attrs?.x? and attrs?.y?
         bodyDef = new b2BodyDef
         bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
         bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
@@ -105,16 +118,24 @@ Crafty.c "Box2D",
         fixDef.restitution = attrs.restitution ? 0.2
 
         if attrs.w? or attrs.h?
-          attrs.w = attrs.w ? attrs.h
-          attrs.h = attrs.h ? attrs.w
+          w = (attrs.w ? attrs.h) / SCALE
+          h = (attrs.h ? attrs.w) / SCALE
 
           fixDef.shape = new b2PolygonShape
-          # SetAsBox takes a half width and half height
-          fixDef.shape.SetAsBox attrs.w/SCALE/2, attrs.h/SCALE/2
+          fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
           @body.CreateFixture fixDef
 
         if attrs.r?
+          @w = @h = attrs.r*2
           fixDef.shape = new b2CircleShape attrs.r/SCALE
+          fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
           @body.CreateFixture fixDef
+
+    @bind "EnterFrame", =>
+      if @body and @body.IsAwake()
+        pos = @body.GetPosition()
+        @x = pos.x*SCALE
+        @y = pos.y*SCALE
+        @rotation = Crafty.math.radToDeg(@body.GetAngle());
 
     @

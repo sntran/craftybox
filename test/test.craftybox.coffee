@@ -53,13 +53,13 @@ describe "CraftyBox Component", ->
       shape.GetVertexCount().should.equal 4
       vertices = shape.GetVertices()
 
-      halfWidth = attrs.w/SCALE/2
-      halfHeight = attrs.h/SCALE/2     
+      w = attrs.w/SCALE
+      h = attrs.h/SCALE    
       # Note: vertices are in local cordinates
-      vertices[0].should.eql {x: -halfWidth, y: -halfHeight}
-      vertices[1].should.eql {x: halfWidth, y: -halfHeight}
-      vertices[2].should.eql {x: halfWidth, y: halfHeight}
-      vertices[3].should.eql {x: -halfWidth, y: halfHeight}
+      vertices[0].should.eql {x: 0, y: 0}
+      vertices[1].should.eql {x: w, y: 0}
+      vertices[2].should.eql {x: w, y: h}
+      vertices[3].should.eql {x: 0, y: h}
 
     it "should create a square with only w provided", ->
       attrs = {x:1800, y: 250, w:1800}
@@ -70,11 +70,12 @@ describe "CraftyBox Component", ->
       shape.GetVertexCount().should.equal 4
       vertices = shape.GetVertices()
 
-      halfSide = attrs.w/SCALE/2
-      vertices[0].should.eql {x: -halfSide, y: -halfSide}
-      vertices[1].should.eql {x: halfSide, y: -halfSide}
-      vertices[2].should.eql {x: halfSide, y: halfSide}
-      vertices[3].should.eql {x: -halfSide, y: halfSide}
+      side = attrs.w/SCALE
+      # Note: vertices are in local cordinates
+      vertices[0].should.eql {x: 0, y: 0}
+      vertices[1].should.eql {x: side, y: 0}
+      vertices[2].should.eql {x: side, y: side}
+      vertices[3].should.eql {x: 0, y: side}
 
     it "should create a square with only h provided", ->
       attrs = {x:1800, y: 250, h:1800}
@@ -85,17 +86,33 @@ describe "CraftyBox Component", ->
       shape.GetVertexCount().should.equal 4
       vertices = shape.GetVertices()
 
-      halfSide = attrs.h/SCALE/2
-      vertices[0].should.eql {x: -halfSide, y: -halfSide}
-      vertices[1].should.eql {x: halfSide, y: -halfSide}
-      vertices[2].should.eql {x: halfSide, y: halfSide}
-      vertices[3].should.eql {x: -halfSide, y: halfSide}
+      side = attrs.h/SCALE
+      # Note: vertices are in local cordinates
+      vertices[0].should.eql {x: 0, y: 0}
+      vertices[1].should.eql {x: side, y: 0}
+      vertices[2].should.eql {x: side, y: side}
+      vertices[3].should.eql {x: 0, y: side}
 
     it "should create a circle with r provided", ->
       attrs = {x:1800, y: 250, r:30}
       ent.attr attrs
       shape = ent.body.GetFixtureList().GetShape()
       shape.should.be.an.instanceof b2CircleShape
+
+    it "should have w and h when creating circle", ->
+      attrs = {x:1800, y: 250, r:30}
+      ent.attr attrs
+      ent.w.should.equal attrs.r*2
+      ent.h.should.equal attrs.r*2
+
+    it "should set the local position of the circle to the center", ->
+      attrs = {x:1800, y: 250, r:30}
+      ent.attr attrs
+      SCALE = Crafty.Box2D.SCALE
+      shape = ent.body.GetFixtureList().GetShape()
+      local = shape.GetLocalPosition()
+      local.x.should.equal attrs.r/SCALE
+      local.y.should.equal attrs.r/SCALE
 
     it "should be static by default", ->
       attrs = {x:1800, y: 250, r:30}
@@ -108,4 +125,24 @@ describe "CraftyBox Component", ->
       ent.attr attrs
       type = ent.body.GetDefinition().type
       type.should.equal b2Body.b2_dynamicBody
+
+  describe "when entity is moving", ->
+    it "should move 2D component as well", ->
+      ###attrs = {x:1800, y: 250, w:1800, h:30, dynamic:true}
+      ent = Crafty.e("Box2D").attr(attrs)
+      SCALE = Crafty.Box2D.SCALE
+      ent.body.GetPosition().x.should.equal attrs.x/SCALE
+      ent.body.GetPosition().y.should.equal attrs.y/SCALE
+      #Crafty.Box2D.gravity = {x:0, y:10}
+      count = 0
+      ent.bind "EnterFrame", ->
+        if count < 100
+          pos = ent.body.GetPosition()
+          ent.x.should.equal pos.x/SCALE
+          ent.y.should.equal pos.y/SCALE
+          count++
+        else
+          done()###
+      
+
 

@@ -8,7 +8,33 @@ The components are written in [CoffeeScript](http://jashkenas.github.com/coffee-
 
 Please note that I have just learned JavaScript/CoffeeScript for a few weeks, thus my codes are definitely full of bugs. Please help me improve them.
 
+## Usuage
+
+A static rectangle:
+
+`Crafty.e("Box2D").attr({x:x, y:y, w:w, h:h});`
+
+A dynamic square:
+
+`Crafty.e("Box2D").attr({x:x, y:y, w:w, dynamic: true});`
+
+Also a dynamic square:
+
+`Crafty.e("Box2D").attr({x:x, y:y, w:w, dynamic: true});`
+
+And a dynamic circle:
+
+`Crafty.e("Box2D").attr({x:x, y:y, r:r, dynamic: true});`
+
+The Box2D world is accessible with `Crafty.Box2D.world`
+
 ## Changelogs:
+
+### v0.0.3
+
+* Added usuage
+* Same attributes as of Crafty's 2D component
+* Entities can move and rotate
 
 ### v0.0.2
 
@@ -29,6 +55,6 @@ Please note that I have just learned JavaScript/CoffeeScript for a few weeks, th
 
 ## To Do:
 
-* Link between Crafty's 2D attributes and Box2D attributes
-* Make objects move and rotate
+* <del>Link between Crafty's 2D attributes and Box2D attributes</del>
+* <del>Make objects move and rotate</del>
 * Collision

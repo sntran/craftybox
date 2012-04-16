@@ -20,8 +20,16 @@
           # @comp Crafty.Box2D
           # This will return the Box2D world object,
           # which is a container for bodies and joints.
+          # It will have 0 gravity when initialized.
+          # Gravity can be set through a setter:
+          # Crafty.Box2D.gravity = {x: 0, y:10}
       */
       world: null,
+      /*
+          # #Crafty.Box2D.debug
+          # @comp Crafty.Box2D
+          # This will determine whether to use Box2D's own debug Draw
+      */
       debug: false,
       /*
           # #Crafty.Box2D.init
@@ -32,10 +40,9 @@
           # with the Box2D component can be created
       */
       init: function(options) {
-        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7,
-          _this = this;
+        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world;
         gravityX = (_ref4 = options != null ? options.gravityX : void 0) != null ? _ref4 : 0;
-        gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 10;
+        gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 0;
         this.SCALE = (_ref6 = options != null ? options.scale : void 0) != null ? _ref6 : 30;
         doSleep = (_ref7 = options != null ? options.doSleep : void 0) != null ? _ref7 : true;
         /*
@@ -47,11 +54,14 @@
         AABB = new b2AABB;
         AABB.lowerBound.Set(-100.0, -100.0);
         AABB.upperBound.Set(Crafty.viewport.width + 100.0, Crafty.viewport.height + 100.0);
-        this.world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
+        _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
+        this.__defineSetter__('gravity', function(v) {
+          return _world.SetGravity(new b2Vec2(v.x, v.y));
+        });
         Crafty.bind("EnterFrame", function() {
-          _this.world.Step(1 / 60, 10, 10);
-          if (_this.debug) _this.world.DrawDebugData();
-          return _this.world.ClearForces();
+          _world.Step(1 / 60, 10, 10);
+          if (this.debug) _world.DrawDebugData();
+          return _world.ClearForces();
         });
         if (Crafty.support.canvas) {
           canvas = document.createElement("canvas");
@@ -68,8 +78,9 @@
           debugDraw.SetFillAlpha(0.7);
           debugDraw.SetLineThickness(1.0);
           debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit);
-          return this.world.SetDebugDraw(debugDraw);
+          _world.SetDebugDraw(debugDraw);
         }
+        return this.world = _world;
       }
     }
   });
@@ -98,8 +109,8 @@
           That funnction triggers "Change" event for us to set box2d attributes.
       */
       this.bind("Change", function(attrs) {
-        var bodyDef, fixDef, _ref4, _ref5, _ref6, _ref7, _ref8;
-        if ((attrs.x != null) && (attrs.y != null)) {
+        var bodyDef, fixDef, h, w, _ref4, _ref5, _ref6, _ref7, _ref8;
+        if (((attrs != null ? attrs.x : void 0) != null) && ((attrs != null ? attrs.y : void 0) != null)) {
           bodyDef = new b2BodyDef;
           bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
           bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
@@ -109,16 +120,27 @@
           fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
           fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
           if ((attrs.w != null) || (attrs.h != null)) {
-            attrs.w = (_ref7 = attrs.w) != null ? _ref7 : attrs.h;
-            attrs.h = (_ref8 = attrs.h) != null ? _ref8 : attrs.w;
+            w = ((_ref7 = attrs.w) != null ? _ref7 : attrs.h) / SCALE;
+            h = ((_ref8 = attrs.h) != null ? _ref8 : attrs.w) / SCALE;
             fixDef.shape = new b2PolygonShape;
-            fixDef.shape.SetAsBox(attrs.w / SCALE / 2, attrs.h / SCALE / 2);
+            fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
             _this.body.CreateFixture(fixDef);
           }
           if (attrs.r != null) {
+            _this.w = _this.h = attrs.r * 2;
             fixDef.shape = new b2CircleShape(attrs.r / SCALE);
+            fixDef.shape.SetLocalPosition(new b2Vec2(_this.w / SCALE / 2, _this.h / SCALE / 2));
             return _this.body.CreateFixture(fixDef);
           }
+        }
+      });
+      this.bind("EnterFrame", function() {
+        var pos;
+        if (_this.body && _this.body.IsAwake()) {
+          pos = _this.body.GetPosition();
+          _this.x = pos.x * SCALE;
+          _this.y = pos.y * SCALE;
+          return _this.rotation = Crafty.math.radToDeg(_this.body.GetAngle());
         }
       });
       return this;
