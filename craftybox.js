@@ -172,8 +172,8 @@
         var pos;
         if ((_this.body != null) && _this.body.IsAwake()) {
           pos = _this.body.GetPosition();
-          _this.x = pos.x * SCALE;
-          _this.y = pos.y * SCALE;
+          _this._x = pos.x * SCALE;
+          _this._y = pos.y * SCALE;
           return _this.rotation = Crafty.math.radToDeg(_this.body.GetAngle());
         }
       });

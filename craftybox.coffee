@@ -154,8 +154,8 @@ Crafty.c "Box2D",
     @bind "EnterFrame", =>
       if @body? and @body.IsAwake()
         pos = @body.GetPosition()
-        @x = pos.x*SCALE
-        @y = pos.y*SCALE
+        @_x = pos.x*SCALE
+        @_y = pos.y*SCALE
         @rotation = Crafty.math.radToDeg @body.GetAngle()
 
     @
