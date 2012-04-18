@@ -116,17 +116,22 @@ Crafty.c "Box2D",
     That funnction triggers "Change" event for us to set box2d attributes.
     ###
     @bind "Change", (attrs) =>
-      if attrs?.x? and attrs?.y?
-        if not @body?
-          bodyDef = new b2BodyDef
-          bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
-          bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
-          @body = Crafty.Box2D.world.CreateBody bodyDef
+      return if not attrs?
+      if @body?
+        x = attrs.x ? @x
+        y = attrs.y ? @y
+        @body.SetPosition(new b2Vec2(x/SCALE, y/SCALE))
 
-          fixDef = new b2FixtureDef          
-          fixDef.density = attrs.density ? 1.0
-          fixDef.friction = attrs.friction ? 0.5
-          fixDef.restitution = attrs.restitution ? 0.2
+      else if attrs.x? and attrs.y?
+        bodyDef = new b2BodyDef
+        bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
+        bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
+        @body = Crafty.Box2D.world.CreateBody bodyDef
+
+        fixDef = new b2FixtureDef          
+        fixDef.density = attrs.density ? 1.0
+        fixDef.friction = attrs.friction ? 0.5
+        fixDef.restitution = attrs.restitution ? 0.2
 
         if attrs.w? or attrs.h?
           w = (@w = attrs.w ? attrs.h) / SCALE

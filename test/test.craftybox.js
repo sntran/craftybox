@@ -62,19 +62,22 @@
         return ent.body.GetPosition().y.should.equal(attrs.y / SCALE);
       });
       it("should only set new position when body exists", function() {
-        var attrs;
+        var SCALE, attrs;
         attrs = {
           x: 30,
           y: 30
         };
         ent.attr(attrs);
+        SCALE = Crafty.Box2D.SCALE;
         Crafty.Box2D.world.GetBodyCount().should.equal(1);
         ent.attr({
           x: 50,
           y: 50
         });
         Crafty.Box2D.world.GetBodyCount().should.not.equal(2);
-        return Crafty.Box2D.world.GetBodyCount().should.equal(1);
+        Crafty.Box2D.world.GetBodyCount().should.equal(1);
+        ent.body.GetPosition().x.should.equal(50 / SCALE);
+        return ent.body.GetPosition().y.should.equal(50 / SCALE);
       });
       it("should have no fixture when only x and y provided", function() {
         var attrs;

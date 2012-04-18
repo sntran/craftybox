@@ -135,21 +135,24 @@
           That funnction triggers "Change" event for us to set box2d attributes.
       */
       this.bind("Change", function(attrs) {
-        var bodyDef, fixDef, h, w, _ref4, _ref5, _ref6, _ref7, _ref8;
-        if (((attrs != null ? attrs.x : void 0) != null) && ((attrs != null ? attrs.y : void 0) != null)) {
-          if (!(_this.body != null)) {
-            bodyDef = new b2BodyDef;
-            bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
-            bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
-            _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
-            fixDef = new b2FixtureDef;
-            fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
-            fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
-            fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
-          }
+        var bodyDef, fixDef, h, w, x, y, _ref10, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+        if (!(attrs != null)) return;
+        if (_this.body != null) {
+          x = (_ref4 = attrs.x) != null ? _ref4 : _this.x;
+          y = (_ref5 = attrs.y) != null ? _ref5 : _this.y;
+          return _this.body.SetPosition(new b2Vec2(x / SCALE, y / SCALE));
+        } else if ((attrs.x != null) && (attrs.y != null)) {
+          bodyDef = new b2BodyDef;
+          bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
+          bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
+          _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+          fixDef = new b2FixtureDef;
+          fixDef.density = (_ref6 = attrs.density) != null ? _ref6 : 1.0;
+          fixDef.friction = (_ref7 = attrs.friction) != null ? _ref7 : 0.5;
+          fixDef.restitution = (_ref8 = attrs.restitution) != null ? _ref8 : 0.2;
           if ((attrs.w != null) || (attrs.h != null)) {
-            w = (_this.w = (_ref7 = attrs.w) != null ? _ref7 : attrs.h) / SCALE;
-            h = (_this.h = (_ref8 = attrs.h) != null ? _ref8 : attrs.w) / SCALE;
+            w = (_this.w = (_ref9 = attrs.w) != null ? _ref9 : attrs.h) / SCALE;
+            h = (_this.h = (_ref10 = attrs.h) != null ? _ref10 : attrs.w) / SCALE;
             fixDef.shape = new b2PolygonShape;
             fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
             _this.body.CreateFixture(fixDef);

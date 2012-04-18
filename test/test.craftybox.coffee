@@ -46,10 +46,13 @@ describe "CraftyBox Component", ->
     it "should only set new position when body exists", ->
       attrs = {x: 30, y: 30}
       ent.attr attrs
+      SCALE = Crafty.Box2D.SCALE
       Crafty.Box2D.world.GetBodyCount().should.equal 1
       ent.attr {x: 50, y: 50}
       Crafty.Box2D.world.GetBodyCount().should.not.equal 2
       Crafty.Box2D.world.GetBodyCount().should.equal 1
+      ent.body.GetPosition().x.should.equal 50/SCALE
+      ent.body.GetPosition().y.should.equal 50/SCALE
 
     it "should have no fixture when only x and y provided", ->
       attrs = {x: 30, y: 30}
