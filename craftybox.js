@@ -1,5 +1,5 @@
 (function() {
-  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
+  var Circle, Polygon, b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
 
   b2Vec2 = Box2D.Common.Math.b2Vec2;
 
@@ -40,7 +40,8 @@
           # with the Box2D component can be created
       */
       init: function(options) {
-        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world;
+        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world,
+          _this = this;
         gravityX = (_ref4 = options != null ? options.gravityX : void 0) != null ? _ref4 : 0;
         gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 0;
         this.SCALE = (_ref6 = options != null ? options.scale : void 0) != null ? _ref6 : 30;
@@ -60,7 +61,7 @@
         });
         Crafty.bind("EnterFrame", function() {
           _world.Step(1 / 60, 10, 10);
-          if (this.debug) _world.DrawDebugData();
+          if (_this.debug) _world.DrawDebugData();
           return _world.ClearForces();
         });
         if (Crafty.support.canvas) {
@@ -81,9 +82,34 @@
           _world.SetDebugDraw(debugDraw);
         }
         return this.world = _world;
+      },
+      destroy: function() {
+        var body, _results;
+        _results = [];
+        while ((body = this.world.GetBodyList()) != null) {
+          this.world.DestroyBody(body);
+          _results.push(body = body.GetNext());
+        }
+        return _results;
       }
     }
   });
+
+  Crafty.Box2D.Circle = Circle = (function() {
+
+    function Circle() {}
+
+    return Circle;
+
+  })();
+
+  Crafty.Box2D.Polygon = Polygon = (function() {
+
+    function Polygon() {}
+
+    return Polygon;
+
+  })();
 
   /*
   # #Box2D
@@ -111,17 +137,19 @@
       this.bind("Change", function(attrs) {
         var bodyDef, fixDef, h, w, _ref4, _ref5, _ref6, _ref7, _ref8;
         if (((attrs != null ? attrs.x : void 0) != null) && ((attrs != null ? attrs.y : void 0) != null)) {
-          bodyDef = new b2BodyDef;
-          bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
-          bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
-          _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
-          fixDef = new b2FixtureDef;
-          fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
-          fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
-          fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
+          if (!(_this.body != null)) {
+            bodyDef = new b2BodyDef;
+            bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
+            bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
+            _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+            fixDef = new b2FixtureDef;
+            fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
+            fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
+            fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
+          }
           if ((attrs.w != null) || (attrs.h != null)) {
-            w = ((_ref7 = attrs.w) != null ? _ref7 : attrs.h) / SCALE;
-            h = ((_ref8 = attrs.h) != null ? _ref8 : attrs.w) / SCALE;
+            w = (_this.w = (_ref7 = attrs.w) != null ? _ref7 : attrs.h) / SCALE;
+            h = (_this.h = (_ref8 = attrs.h) != null ? _ref8 : attrs.w) / SCALE;
             fixDef.shape = new b2PolygonShape;
             fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
             _this.body.CreateFixture(fixDef);
@@ -134,9 +162,12 @@
           }
         }
       });
+      /*
+          Update the entity by using Box2D's attributes.
+      */
       this.bind("EnterFrame", function() {
         var pos;
-        if (_this.body && _this.body.IsAwake()) {
+        if ((_this.body != null) && _this.body.IsAwake()) {
           pos = _this.body.GetPosition();
           _this.x = pos.x * SCALE;
           _this.y = pos.y * SCALE;

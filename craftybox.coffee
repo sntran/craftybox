@@ -54,7 +54,7 @@ Crafty.extend
 
       @__defineSetter__('gravity', (v) -> _world.SetGravity(new b2Vec2(v.x, v.y)))
 
-      Crafty.bind "EnterFrame", ->
+      Crafty.bind "EnterFrame", =>
         # TODO: Integrate Step with Crafty rendering framerate
         _world.Step(1/60, 10, 10)
         _world.DrawDebugData() if @debug
@@ -82,6 +82,16 @@ Crafty.extend
 
       @world = _world
 
+    destroy: ->
+      while (body = @world.GetBodyList())?
+        @world.DestroyBody(body)
+        body = body.GetNext()
+
+Crafty.Box2D.Circle = class Circle
+  constructor: ->
+
+Crafty.Box2D.Polygon = class Polygon
+  constructor: ->
 
 ###
 # #Box2D
@@ -107,19 +117,20 @@ Crafty.c "Box2D",
     ###
     @bind "Change", (attrs) =>
       if attrs?.x? and attrs?.y?
-        bodyDef = new b2BodyDef
-        bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
-        bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
-        @body = Crafty.Box2D.world.CreateBody bodyDef
+        if not @body?
+          bodyDef = new b2BodyDef
+          bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
+          bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
+          @body = Crafty.Box2D.world.CreateBody bodyDef
 
-        fixDef = new b2FixtureDef          
-        fixDef.density = attrs.density ? 1.0
-        fixDef.friction = attrs.friction ? 0.5
-        fixDef.restitution = attrs.restitution ? 0.2
+          fixDef = new b2FixtureDef          
+          fixDef.density = attrs.density ? 1.0
+          fixDef.friction = attrs.friction ? 0.5
+          fixDef.restitution = attrs.restitution ? 0.2
 
         if attrs.w? or attrs.h?
-          w = (attrs.w ? attrs.h) / SCALE
-          h = (attrs.h ? attrs.w) / SCALE
+          w = (@w = attrs.w ? attrs.h) / SCALE
+          h = (@h = attrs.h ? attrs.w) / SCALE
 
           fixDef.shape = new b2PolygonShape
           fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
@@ -131,11 +142,16 @@ Crafty.c "Box2D",
           fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
           @body.CreateFixture fixDef
 
+
+    ###
+    Update the entity by using Box2D's attributes.
+    ###
     @bind "EnterFrame", =>
-      if @body and @body.IsAwake()
+      if @body? and @body.IsAwake()
         pos = @body.GetPosition()
         @x = pos.x*SCALE
         @y = pos.y*SCALE
-        @rotation = Crafty.math.radToDeg(@body.GetAngle());
+        @rotation = Crafty.math.radToDeg @body.GetAngle()
 
     @
+

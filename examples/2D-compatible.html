@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - 2D Component Compatible</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+</head>
+<body>
+
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+
+	window.follower = Crafty.e("2D, Canvas, Color")
+						.attr({x:1*30, y:1*30, w: 2*2*30, h:1*2*30, dynamic: true})
+						.color("red");
+	window.followee = Crafty.e("2D, Canvas, Color, Draggable")
+						.attr({x:6*30, y:5*30, w: 1*2*30, h:1*2*30, dynamic: true})
+						.color("blue")
+						.attach(follower);
+	
+
+}
+</script>
+</body>
+</html>

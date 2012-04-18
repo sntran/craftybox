@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - 2D Component Compatible</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+</head>
+<body>
+
+<script>
+window.onload = function() {
+	var ACTIVE = "#EDC9C9";
+	var SLEEPING = "#B7B7B7";
+	var STATIC = "#A5EDA5";
+
+	Crafty.init(800, 600);
+	//Crafty.Box2D.debug = true;
+	// Create ground
+	Crafty.e("Box2D, Canvas, Color")
+				.attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30})
+				.color(STATIC);
+			
+	for(var i = 0; i < 10; ++i) {
+		(function() {
+			var x = (Math.random() * 10)*30;
+			var y = (Math.random() * 10)*30;
+			//var components = "Box2D, Canvas, Color";
+			var components = "Box2D, Canvas";
+
+			if(Math.random() > 0.5) {
+				var hW = (Math.random() + 0.1)*30;
+				var hH = (Math.random() + 0.1)*30;
+				var ent = Crafty.e(components)
+							.attr({x:x, y:y, w: hW*2, h: hH*2, dynamic: true});
+
+				// Simulate Box2D's debugDraw
+				ent.ready = true;
+				ent.bind("Draw", function(obj) {
+					obj.ctx.fillStyle = ent.body.IsAwake()? ACTIVE : SLEEPING;
+					obj.ctx.fillRect(obj.pos._x, obj.pos._y, obj.pos._w, obj.pos._h);
+				})
+
+			} else {
+				var r = (Math.random() + 0.1)*30;
+				var ent = Crafty.e(components)
+							.attr({x:x, y:y, r:r, dynamic: true});
+
+				// Simulate Box2D's debugDraw
+				ent.ready = true;	
+				ent.bind("Draw", function(obj){
+					obj.ctx.fillStyle = ent.body.IsAwake()? ACTIVE : SLEEPING;
+					obj.ctx.beginPath();
+					centerX = obj.pos._x+obj.pos._w/2;
+					centerY = obj.pos._y+obj.pos._h/2;
+					obj.ctx.arc(centerX, centerY, obj.pos._w/2, 0, Math.PI*2, true);
+					obj.ctx.closePath();
+					obj.ctx.fill();
+				});
+			}
+		})();
+	}
+
+	// Default of world's gravity is 0, so to make dynamic entities move
+	// set new gravity here
+	Crafty.Box2D.gravity = {x: 0, y: 10};
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - Mouse</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+</head>
+<body>
+
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+	Crafty.Box2D.debug = true;
+	
+	var draggable = Crafty.e("Box2D, Canvas, Color, Draggable")
+						.attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true})
+						.color("blue");
+	
+
+}
+</script>
+</body>
+</html>

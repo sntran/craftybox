@@ -6,9 +6,29 @@ It uses [Box2DWeb](http://code.google.com/p/box2dweb/), which is a JavaScript po
 
 The components are written in [CoffeeScript](http://jashkenas.github.com/coffee-script/), which speeds up the developing process really quick.
 
-Please note that I have just learned JavaScript/CoffeeScript for a few weeks, thus my codes are definitely full of bugs. Please help me improve them.
+A compiled JS file is available.
 
 ## Usuage
+
+### Initialization
+
+You can initialize after Crafty with a set of optional options:
+
+````javascript
+Crafty.init()
+Crafty.Box2D.init({gravityX:0, gravityY:0, scale:30, doSleep:true})
+````
+
+The default world has no gravity, allows sleeping, and has a SCALE of 30.
+
+Or it will be initialized when you create a Box2D entity. You cannot set the world's properties at this point, and it will use the default values.
+
+However you can change them through setters anytime after the world is created
+
+````javascript
+Crafty.Box2D.gravity = {x: 0, y: 10}
+Crafty.Box2D.SCALE = 1
+````
 
 A static rectangle:
 
@@ -20,7 +40,7 @@ A dynamic square:
 
 Also a dynamic square:
 
-`Crafty.e("Box2D").attr({x:x, y:y, w:w, dynamic: true});`
+`Crafty.e("Box2D").attr({x:x, y:y, h:h, dynamic: true});`
 
 And a dynamic circle:
 
@@ -35,6 +55,8 @@ The Box2D world is accessible with `Crafty.Box2D.world`
 * Added usuage
 * Same attributes as of Crafty's 2D component
 * Entities can move and rotate
+* Finished Box2D example.
+* Don't recreate body when .attr({x, y}) is called again.
 
 ### v0.0.2
 
@@ -58,3 +80,5 @@ The Box2D world is accessible with `Crafty.Box2D.world`
 * <del>Link between Crafty's 2D attributes and Box2D attributes</del>
 * <del>Make objects move and rotate</del>
 * Collision
+* `.rotate`, `.origin`, `.flip`, etc...
+* `"Mouse"`, `"Draggable"`, `"Four-way"`, etc...
