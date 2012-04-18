@@ -118,11 +118,33 @@ Crafty.c "Box2D",
     @bind "Change", (attrs) =>
       return if not attrs?
       if @body?
-        x = attrs.x ? @x
-        y = attrs.y ? @y
-        @body.SetPosition(new b2Vec2(x/SCALE, y/SCALE))
+        # When individual attributes are set through 2d._attr(), which always
+        # send {_x, _y, _w, _h}, the attributes before change
+        if attrs._x isnt @x or attrs._y isnt @y
+          # When changing position
+          @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
+        
+        if attrs._w isnt @_w or attrs._h isnt @_h
+          # Setting w or h will create a shape
+          # When resizing, need to destroy initial shape, then add a new one
+          # TODO: detect when shifting circle
+          if not @r?
+            w = @w / SCALE
+            h = @h / SCALE
+            if @body.GetFixtureList()?
+              @body.DestroyFixture @body.GetFixtureList()
+
+            # TODO: Duplicate codes, refactor it
+            fixDef = new b2FixtureDef          
+            fixDef.density = attrs.density ? 1.0
+            fixDef.friction = attrs.friction ? 0.5
+            fixDef.restitution = attrs.restitution ? 0.2
+            fixDef.shape = new b2PolygonShape
+            fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
+            @body.CreateFixture fixDef
 
       else if attrs.x? and attrs.y?
+        # Creating a new body requires both x and y, and  ( (w and h) or r)
         bodyDef = new b2BodyDef
         bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
         bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
@@ -134,6 +156,7 @@ Crafty.c "Box2D",
         fixDef.restitution = attrs.restitution ? 0.2
 
         if attrs.w? or attrs.h?
+          # Need to set same @w if only one param is provided
           w = (@w = attrs.w ? attrs.h) / SCALE
           h = (@h = attrs.h ? attrs.w) / SCALE
 

@@ -61,6 +61,22 @@
         ent.body.GetPosition().x.should.equal(attrs.x / SCALE);
         return ent.body.GetPosition().y.should.equal(attrs.y / SCALE);
       });
+      it("should change position when changing x or y", function() {
+        var SCALE, attrs;
+        attrs = {
+          x: 30,
+          y: 30
+        };
+        ent.attr(attrs);
+        SCALE = Crafty.Box2D.SCALE;
+        ent.x = 60;
+        ent.body.GetPosition().x.should.equal(60 / SCALE);
+        ent.body.GetPosition().y.should.equal(attrs.y / SCALE);
+        ent.x = 80;
+        ent.y = 70;
+        ent.body.GetPosition().x.should.equal(80 / SCALE);
+        return ent.body.GetPosition().y.should.equal(70 / SCALE);
+      });
       it("should only set new position when body exists", function() {
         var SCALE, attrs;
         attrs = {
@@ -264,7 +280,7 @@
       });
     });
     return describe("2D Component", function() {
-      var cirAttrs, circle, recAttrs, rectangle;
+      var SCALE, cirAttrs, circle, recAttrs, rectangle;
       rectangle = null;
       circle = null;
       recAttrs = {
@@ -278,9 +294,11 @@
         y: 100,
         r: 50
       };
+      SCALE = 0;
       beforeEach(function() {
         rectangle = Crafty.e("Box2D").attr(recAttrs);
-        return circle = Crafty.e("Box2D").attr(cirAttrs);
+        circle = Crafty.e("Box2D").attr(cirAttrs);
+        return SCALE = Crafty.Box2D.SCALE;
       });
       describe(".area()", function() {
         it("should return w * h for rectangle", function() {
@@ -302,9 +320,15 @@
       describe(".contains(x, y, w, h)", function() {});
       describe(".pos()", function() {});
       describe(".mbr()", function() {});
-      describe(".isAt(x, y)", function() {});
+      describe(".isAt(x, y) #used for below tests", function() {
+        return it("should check for both 2D and Box2D", function() {
+          rectangle.isAt(recAttrs.x, recAttrs.y).should.be["true"];
+          rectangle.body.GetPosition().x.should.equal(recAttrs.x / SCALE);
+          return rectangle.body.GetPosition().y.should.equal(recAttrs.y / SCALE);
+        });
+      });
       describe(".move(dir, by)", function() {
-        it("should has x and y at the specified location", function() {
+        return it("should has x and y at the specified location", function() {
           var amount;
           amount = 10;
           rectangle.move("n", amount).isAt(recAttrs.x, recAttrs.y - amount).should.be["true"];
@@ -312,17 +336,86 @@
           rectangle.move("e", amount).isAt(recAttrs.x + amount, recAttrs.y).should.be["true"];
           return rectangle.move("w", amount).isAt(recAttrs.x, recAttrs.y).should.be["true"];
         });
-        return it("should move Box2D position as well", function() {
-          var SCALE, amount;
-          amount = 30;
-          SCALE = Crafty.Box2D.SCALE;
-          return rectangle.move("n", amount).body.GetPosition().should.eql({
-            x: recAttrs.x / SCALE,
-            y: (recAttrs.y - amount) / SCALE
+      });
+      describe(".shift(x, y, w, h)", function() {
+        it("should move the entity by an amount in specified direction", function() {
+          rectangle.shift(10).isAt(recAttrs.x + 10, recAttrs.y).should.be["true"];
+          rectangle.shift(-10).isAt(recAttrs.x, recAttrs.y).should.be["true"];
+          return rectangle.shift(-10, 10).isAt(recAttrs.x - 10, recAttrs.y + 10).should.be["true"];
+        });
+        it("should change width and/or height for rectangle", function() {
+          var h, vertices, w;
+          rectangle.shift(0, 0, 10).w.should.equal(recAttrs.w + 10);
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
+          w = (recAttrs.w + 10) / SCALE;
+          h = recAttrs.h / SCALE;
+          vertices[0].should.eql({
+            x: 0,
+            y: 0
+          });
+          vertices[1].should.eql({
+            x: w,
+            y: 0
+          });
+          vertices[2].should.eql({
+            x: w,
+            y: h
+          });
+          vertices[3].should.eql({
+            x: 0,
+            y: h
+          });
+          rectangle.shift(0, 0, -10).w.should.equal(recAttrs.w);
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
+          w = recAttrs.w / SCALE;
+          h = recAttrs.h / SCALE;
+          vertices[0].should.eql({
+            x: 0,
+            y: 0
+          });
+          vertices[1].should.eql({
+            x: w,
+            y: 0
+          });
+          vertices[2].should.eql({
+            x: w,
+            y: h
+          });
+          vertices[3].should.eql({
+            x: 0,
+            y: h
+          });
+          rectangle.shift(0, 0, -10, 10).w.should.equal(recAttrs.w - 10);
+          rectangle.h.should.equal(recAttrs.h + 10);
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
+          w = (recAttrs.w - 10) / SCALE;
+          h = (recAttrs.h + 10) / SCALE;
+          vertices[0].should.eql({
+            x: 0,
+            y: 0
+          });
+          vertices[1].should.eql({
+            x: w,
+            y: 0
+          });
+          vertices[2].should.eql({
+            x: w,
+            y: h
+          });
+          return vertices[3].should.eql({
+            x: 0,
+            y: h
           });
         });
+        it("should change radius for circle", function() {
+          circle.shift(0, 0, 30).r.should.equal(cirAttrs.r + 30);
+          return circle.r.should.equal("Need to check for Box2D here");
+        });
+        return it("should only shift the third param for radius", function() {
+          circle.shift(0, 0, 30, 60).r.should.equal(cirAttrs.r + 30);
+          return circle.r.should.equal("Need to check for Box2D here");
+        });
       });
-      describe(".shift(x, y, w, h)", function() {});
       describe(".attach(Entity obj[, .., Entity objN])", function() {
         return it("should move the follower", function() {
           var amount, attrs, follower;
@@ -335,10 +428,26 @@
           follower = Crafty.e("Box2D").attr(attrs);
           amount = 30;
           rectangle.attach(follower).move("n", amount);
-          return follower.y.should.equal(attrs.y - amount);
+          return follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
         });
       });
-      describe(".detach(obj)", function() {});
+      describe(".detach(obj)", function() {
+        return it("should stop following the rectangle", function() {
+          var amount, attrs, follower;
+          attrs = {
+            x: 200,
+            y: 200,
+            w: 50,
+            h: 50
+          };
+          follower = Crafty.e("Box2D").attr(attrs);
+          amount = 30;
+          rectangle.attach(follower).move("n", amount);
+          follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
+          rectangle.detach(follower).move("n", amount);
+          return follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
+        });
+      });
       describe(".origin(x, y)", function() {});
       describe(".flip(dir)", function() {});
       return describe(".rotate(e)", function() {});

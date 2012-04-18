@@ -20,9 +20,8 @@ window.onload = function() {
 	Crafty.init(800, 600);
 	Crafty.Box2D.debug = true;
 	
-	var draggable = Crafty.e("Box2D, Canvas, Color, Draggable")
-						.attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true})
-						.color("blue");
+	var draggable = Crafty.e("Box2D, Draggable")
+						.attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true});
 	
 
 }

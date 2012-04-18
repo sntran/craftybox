@@ -1,12 +1,17 @@
 # CraftyBox 
 
-Here are some components I am working on to help using Box2D in Crafty.js engine.
+Here are some components I am working on to help using Box2D in Crafty.js [web](http://craftyjs.com/) | [github](https://github.com/craftyjs/Crafty) engine.
 
 It uses [Box2DWeb](http://code.google.com/p/box2dweb/), which is a JavaScript port from [Box2DFlash](http://www.box2dflash.org), which is a port from the original [Box2D](http://www.gphysics.com/) physic engine written in C++.
 
 The components are written in [CoffeeScript](http://jashkenas.github.com/coffee-script/), which speeds up the developing process really quick.
 
 A compiled JS file is available.
+
+## Components
+
+* `Box2D`: intended to replace `2D, Physics, Gravity, Collision`.
+* `Throwable`: intended to replace `Draggable`. Of course it uses `Mouse`.
 
 ## Usuage
 
@@ -57,6 +62,7 @@ The Box2D world is accessible with `Crafty.Box2D.world`
 * Entities can move and rotate
 * Finished Box2D example.
 * Don't recreate body when .attr({x, y}) is called again.
+* Made `.isAt`, `.move`, `.attach`, '.detach' work.
 
 ### v0.0.2
 
