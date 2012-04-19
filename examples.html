@@ -5,22 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=640" />
 
-    <link rel="stylesheet" href="../stylesheets/core.css" media="screen"/>
-    <link rel="stylesheet" href="../stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
-    <link rel="stylesheet" href="../stylesheets/pygment_trac.css"/>
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
 
-    <script type="text/javascript" src="../javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="../javascripts/headsmart.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function () {
         $('#main_content').headsmart()
       })
     </script>
-    <title>Craftybox by noderl</title>
-    <script src="https://raw.github.com/noderl/craftybox/master/lib/4.crafty.js"></script>
-    <script src="https://raw.github.com/noderl/craftybox/master/lib/5.box2d.min.js"></script>
-    <script src="https://raw.github.com/noderl/craftybox/master/craftybox.js"></script>
+    <title>Craftybox by noderl (Son Tran-Nguyen)</title>
   </head>
 
   <body>
@@ -47,10 +44,25 @@
       <span class="banner-fix"></span>
 
       <section id="main_content">
-        <h1>Examples - Input</h1>
-        <p>In this example, I use Crafty's "Fourway" and "Draggable" to demonstrate that input can be used with "Box2D" entity as usual. User WSAD or arrow keys to move. Use mouse to drag.</p>
+        <h1>CraftyBox Examples</h1>
 
-        <div id="cr-stage"></div>
+        <ul>
+          <li>
+            <h2>Box2D Example</h2>
+            <iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/Esente/H3MfC/embedded/js,result,resources,html" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+          </li>
+
+          <li>
+            <h2>Compatible with 2D Component</h2>
+            <iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/Esente/23twW/embedded/js,result,resources,html" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+          </li>
+
+          <li>
+            <h2>Compatible with input components</h2>
+            <iframe style="width: 100%; height: 300px" src="http://jsfiddle.net/Esente/CGcxX/embedded/js,result,resources,html" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+          </li>
+        </ul>
+
       </section>
 
       <footer>
@@ -66,18 +78,6 @@
       </footer>
 
     </div>
-    <script>
-      window.onload = function() {
-        Crafty.init(800, 600);
-        Crafty.Box2D.debug = true;
-        
-        var draggable = Crafty.e("Box2D, Fourway, Draggable")
-                  .attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true})
-                  .fourway(10);
-        
-
-      }
-      </script>
 
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
