@@ -62,7 +62,8 @@ The Box2D world is accessible with `Crafty.Box2D.world`
 * Entities can move and rotate
 * Finished Box2D example.
 * Don't recreate body when .attr({x, y}) is called again.
-* Made `.isAt`, `.move`, `.attach`, '.detach' work.
+* Made `.isAt`, `.move`, `.shift`, `.attach`, '.detach' work.
+* More examples.
 
 ### v0.0.2
 

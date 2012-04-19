@@ -119,29 +119,53 @@ Crafty.c "Box2D",
       return if not attrs?
       if @body?
         # When individual attributes are set through 2d._attr(), which always
-        # send {_x, _y, _w, _h}, the attributes before change
+        # send {_x, _y, _w, _h}, the attributes before change.
         if attrs._x isnt @x or attrs._y isnt @y
           # When changing position
           @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
         
-        if attrs._w isnt @_w or attrs._h isnt @_h
-          # Setting w or h will create a shape
+        if (newW = attrs._w isnt @w) or (newH = attrs._h isnt @h)
+          # Reseting w and h is to resize, but Box2D does not scale.
           # When resizing, need to destroy initial shape, then add a new one
-          # TODO: detect when shifting circle
+          fixDef = new b2FixtureDef          
+          fixDef.density = attrs.density ? 1.0
+          fixDef.friction = attrs.friction ? 0.5
+          fixDef.restitution = attrs.restitution ? 0.2
+
           if not @r?
             w = @w / SCALE
             h = @h / SCALE
+
+            # Remove any old fixture
             if @body.GetFixtureList()?
               @body.DestroyFixture @body.GetFixtureList()
 
-            # TODO: Duplicate codes, refactor it
-            fixDef = new b2FixtureDef          
-            fixDef.density = attrs.density ? 1.0
-            fixDef.friction = attrs.friction ? 0.5
-            fixDef.restitution = attrs.restitution ? 0.2
+            # TODO: Duplicate codes, refactor it            
             fixDef.shape = new b2PolygonShape
             fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
             @body.CreateFixture fixDef
+
+          else if attrs._w isnt @w
+            # Shifting circle radius will only take the third param, which is the _w
+            # or the _h if _w is not change. The other param is ignored.
+            # See test cases for examples.
+            @r += @w-attrs._w
+            # Not use setters to avoid Change event
+            @_w = @_h = @r*2
+
+            # Remove any old fixture
+            if @body.GetFixtureList()?
+              @body.DestroyFixture @body.GetFixtureList()
+
+            fixDef.shape = new b2CircleShape @r/SCALE
+            fixDef.shape.SetLocalPosition new b2Vec2 @r/SCALE, @r/SCALE
+            @body.CreateFixture fixDef
+
+          else
+            ## When being a circle but a new height is being set
+            ## Set test cases for more detail
+            @_w = attrs._w
+            @_h = attrs._h
 
       else if attrs.x? and attrs.y?
         # Creating a new body requires both x and y, and  ( (w and h) or r)
@@ -155,19 +179,20 @@ Crafty.c "Box2D",
         fixDef.friction = attrs.friction ? 0.5
         fixDef.restitution = attrs.restitution ? 0.2
 
-        if attrs.w? or attrs.h?
-          # Need to set same @w if only one param is provided
+        if attrs.r?
+          # Not use setters to avoid Change event
+          @_w = @_h = attrs.r*2
+          fixDef.shape = new b2CircleShape attrs.r/SCALE
+          fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
+          @body.CreateFixture fixDef
+
+        else if attrs.w? or attrs.h?
+          # Need to set same @w or same @h if only one param is provided
           w = (@w = attrs.w ? attrs.h) / SCALE
           h = (@h = attrs.h ? attrs.w) / SCALE
 
           fixDef.shape = new b2PolygonShape
           fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
-          @body.CreateFixture fixDef
-
-        if attrs.r?
-          @w = @h = attrs.r*2
-          fixDef.shape = new b2CircleShape attrs.r/SCALE
-          fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
           @body.CreateFixture fixDef
 
 
@@ -177,6 +202,7 @@ Crafty.c "Box2D",
     @bind "EnterFrame", =>
       if @body? and @body.IsAwake()
         pos = @body.GetPosition()
+        # Not use setters to avoid Change event
         @_x = pos.x*SCALE
         @_y = pos.y*SCALE
         @rotation = Crafty.math.radToDeg @body.GetAngle()

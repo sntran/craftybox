@@ -14,14 +14,15 @@
 	<script src="../craftybox.js"></script>
 </head>
 <body>
-
+<p>In this example, I use Crafty's "Fourway" and "Draggable" to demonstrate that input can be used with "Box2D" entity as usual. User WSAD or arrow keys to move. Use mouse to drag.</p>
 <script>
 window.onload = function() {
 	Crafty.init(800, 600);
 	Crafty.Box2D.debug = true;
 	
-	var draggable = Crafty.e("Box2D, Draggable")
-						.attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true});
+	var draggable = Crafty.e("Box2D, Fourway, Draggable")
+						.attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true})
+						.fourway(10);
 	
 
 }

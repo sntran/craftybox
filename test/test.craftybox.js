@@ -230,6 +230,16 @@
         shape = ent.body.GetFixtureList().GetShape();
         return shape.should.be.an["instanceof"](b2CircleShape);
       });
+      it("should have the correct radius", function() {
+        var attrs;
+        attrs = {
+          x: 1800,
+          y: 250,
+          r: 30
+        };
+        ent.attr(attrs);
+        return ent.r.should.equal(attrs.r);
+      });
       it("should have w and h when creating circle", function() {
         var attrs;
         attrs = {
@@ -409,11 +419,21 @@
         });
         it("should change radius for circle", function() {
           circle.shift(0, 0, 30).r.should.equal(cirAttrs.r + 30);
-          return circle.r.should.equal("Need to check for Box2D here");
+          return circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
         });
-        return it("should only shift the third param for radius", function() {
+        it("should only shift the third param for radius", function() {
           circle.shift(0, 0, 30, 60).r.should.equal(cirAttrs.r + 30);
-          return circle.r.should.equal("Need to check for Box2D here");
+          circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
+          circle.shift(0, 0, 0, 60).r.should.equal(cirAttrs.r + 30);
+          return circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
+        });
+        it("should set new width and height for circle", function() {
+          circle.shift(0, 0, 30).w.should.equal((cirAttrs.r + 30) * 2);
+          return circle.h.should.equal((cirAttrs.r + 30) * 2);
+        });
+        return it("should not set new width and height for circle when no third param", function() {
+          circle.shift(0, 0, 0, 30).w.should.equal(cirAttrs.r * 2);
+          return circle.h.should.equal(cirAttrs.r * 2);
         });
       });
       describe(".attach(Entity obj[, .., Entity objN])", function() {

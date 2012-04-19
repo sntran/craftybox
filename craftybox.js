@@ -135,26 +135,38 @@
           That funnction triggers "Change" event for us to set box2d attributes.
       */
       this.bind("Change", function(attrs) {
-        var bodyDef, fixDef, h, w, _ref10, _ref11, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+        var bodyDef, fixDef, h, newH, newW, w, _ref10, _ref11, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
         if (!(attrs != null)) return;
         if (_this.body != null) {
           if (attrs._x !== _this.x || attrs._y !== _this.y) {
             _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
           }
-          if (attrs._w !== _this._w || attrs._h !== _this._h) {
+          if ((newW = attrs._w !== _this.w) || (newH = attrs._h !== _this.h)) {
+            fixDef = new b2FixtureDef;
+            fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
+            fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
+            fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
             if (!(_this.r != null)) {
               w = _this.w / SCALE;
               h = _this.h / SCALE;
               if (_this.body.GetFixtureList() != null) {
                 _this.body.DestroyFixture(_this.body.GetFixtureList());
               }
-              fixDef = new b2FixtureDef;
-              fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
-              fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
-              fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
               fixDef.shape = new b2PolygonShape;
               fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
               return _this.body.CreateFixture(fixDef);
+            } else if (attrs._w !== _this.w) {
+              _this.r += _this.w - attrs._w;
+              _this._w = _this._h = _this.r * 2;
+              if (_this.body.GetFixtureList() != null) {
+                _this.body.DestroyFixture(_this.body.GetFixtureList());
+              }
+              fixDef.shape = new b2CircleShape(_this.r / SCALE);
+              fixDef.shape.SetLocalPosition(new b2Vec2(_this.r / SCALE, _this.r / SCALE));
+              return _this.body.CreateFixture(fixDef);
+            } else {
+              _this._w = attrs._w;
+              return _this._h = attrs._h;
             }
           }
         } else if ((attrs.x != null) && (attrs.y != null)) {
@@ -166,17 +178,16 @@
           fixDef.density = (_ref7 = attrs.density) != null ? _ref7 : 1.0;
           fixDef.friction = (_ref8 = attrs.friction) != null ? _ref8 : 0.5;
           fixDef.restitution = (_ref9 = attrs.restitution) != null ? _ref9 : 0.2;
-          if ((attrs.w != null) || (attrs.h != null)) {
+          if (attrs.r != null) {
+            _this._w = _this._h = attrs.r * 2;
+            fixDef.shape = new b2CircleShape(attrs.r / SCALE);
+            fixDef.shape.SetLocalPosition(new b2Vec2(_this.w / SCALE / 2, _this.h / SCALE / 2));
+            return _this.body.CreateFixture(fixDef);
+          } else if ((attrs.w != null) || (attrs.h != null)) {
             w = (_this.w = (_ref10 = attrs.w) != null ? _ref10 : attrs.h) / SCALE;
             h = (_this.h = (_ref11 = attrs.h) != null ? _ref11 : attrs.w) / SCALE;
             fixDef.shape = new b2PolygonShape;
             fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
-            _this.body.CreateFixture(fixDef);
-          }
-          if (attrs.r != null) {
-            _this.w = _this.h = attrs.r * 2;
-            fixDef.shape = new b2CircleShape(attrs.r / SCALE);
-            fixDef.shape.SetLocalPosition(new b2Vec2(_this.w / SCALE / 2, _this.h / SCALE / 2));
             return _this.body.CreateFixture(fixDef);
           }
         }
