@@ -1,6 +1,6 @@
 # CraftyBox 
 
-Here are some components I am working on to help using Box2D in Crafty.js [web](http://craftyjs.com/) | [github](https://github.com/craftyjs/Crafty) engine.
+Here are some components I am working on to help using Box2D in Crafty.js ([web](http://craftyjs.com/) | [github](https://github.com/craftyjs/Crafty)) engine.
 
 It uses [Box2DWeb](http://code.google.com/p/box2dweb/), which is a JavaScript port from [Box2DFlash](http://www.box2dflash.org), which is a port from the original [Box2D](http://www.gphysics.com/) physic engine written in C++.
 
