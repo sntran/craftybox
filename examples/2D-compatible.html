@@ -14,20 +14,103 @@
 	<script src="../craftybox.js"></script>
 </head>
 <body>
+	<p>Demonstrate some of the regular usuages with Crafty's "2D" that can be applied with "Box2D". Attach the rectangle to the circle and drag the circle around. Detach will stop the behavior. </p>
+	<button id="attach">Attach</button>	
+	<button id="moveN">Move 10N </button>
+	<button id="detach">Detach</button><br />
+	<button id="moveW">Move 10W </button> 
+	<button id="moveS">Move 10S </button>
+	<button id="moveE">Move 10E </button><br />
+	<button id="shiftX">Shift 10X</button>
+	<button id="shiftY">Shift 10Y</button>
+	<button id="shiftW">Shift 10W</button>
+	<button id="shiftH">Shift 10H</button><br />
+	<button id="shiftXN">Shift -10X</button>
+	<button id="shiftYN">Shift -10Y</button>
+	<button id="shiftWN">Shift -10W</button>
+	<button id="shiftHN">Shift -10H</button>
 
 <script>
 window.onload = function() {
 	Crafty.init(800, 600);
+	Crafty.Box2D.debug = true;
 
-	window.follower = Crafty.e("2D, Canvas, Color")
-						.attr({x:1*30, y:1*30, w: 2*2*30, h:1*2*30, dynamic: true})
-						.color("red");
-	window.followee = Crafty.e("2D, Canvas, Color, Draggable")
-						.attr({x:6*30, y:5*30, w: 1*2*30, h:1*2*30, dynamic: true})
-						.color("blue")
-						.attach(follower);
+	window.follower = Crafty.e("Box2D")
+						.attr({x:1*30, y:1*30, w: 2*2*30, h:1*2*30, dynamic: true});
+
+	window.followee = Crafty.e("Box2D, Draggable")
+						.attr({x:6*30, y:5*30, r: 2*30, dynamic: true})
 	
+	$("#attach").click(function() {
+		followee.attach(follower);
+	});
 
+	$("#detach").click(function() {
+		followee.detach(follower);
+	});
+
+	// Move them!
+	$("#moveN").click(function() {
+		follower.move("n", 10);
+		followee.move("n", 10);
+	});
+
+	$("#moveS").click(function() {
+		follower.move("s", 10);
+		followee.move("s", 10);
+	});
+
+	$("#moveE").click(function() {
+		follower.move("e", 10);
+		followee.move("e", 10);
+	});
+
+	$("#moveW").click(function() {
+		follower.move("w", 10);
+		followee.move("w", 10);
+	});
+
+	// Shift up
+	$("#shiftX").click(function() {
+		follower.shift(10);
+		followee.shift(10);
+	});
+
+	$("#shiftY").click(function() {
+		follower.shift(0, 10);
+		followee.shift(0, 10);
+	});
+
+	$("#shiftW").click(function() {
+		follower.shift(0, 0, 10);
+		followee.shift(0, 0, 10);
+	});
+
+	$("#shiftH").click(function() {
+		follower.shift(0, 0, 0, 10);
+		followee.shift(0, 0, 0, 10);
+	});
+
+	// Shift down
+	$("#shiftXN").click(function() {
+		follower.shift(-10);
+		followee.shift(-10);
+	});
+
+	$("#shiftYN").click(function() {
+		follower.shift(0, -10);
+		followee.shift(0, -10);
+	});
+
+	$("#shiftWN").click(function() {
+		follower.shift(0, 0, -10);
+		followee.shift(0, 0, -10);
+	});
+
+	$("#shiftHN").click(function() {
+		follower.shift(0, 0, 0, -10);
+		followee.shift(0, 0, 0, -10);
+	});
 }
 </script>
 </body>

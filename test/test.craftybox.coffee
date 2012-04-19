@@ -4,6 +4,7 @@ b2Vec2 = Box2D.Common.Math.b2Vec2
 {b2AABB, Shapes: {b2MassData, b2PolygonShape, b2CircleShape}} = Box2D.Collision
 
 describe "CraftyBox Component", ->
+
   describe "when initialized", ->
     it "should set up a world", ->
       should.not.exist Crafty.Box2D.world
@@ -23,8 +24,8 @@ describe "CraftyBox Component", ->
       ent = Crafty.e("Box2D")
 
     afterEach ->
-      Crafty.Box2D.destroy()
       ent.destroy()
+      Crafty.Box2D.destroy()
 
     it "should not create a body when missing x or y", ->
       ent.attr({x:30})
@@ -42,6 +43,18 @@ describe "CraftyBox Component", ->
       SCALE = Crafty.Box2D.SCALE
       ent.body.GetPosition().x.should.equal attrs.x/SCALE
       ent.body.GetPosition().y.should.equal attrs.y/SCALE
+
+    it "should change position when changing x or y", ->
+      attrs = {x: 30, y: 30}
+      ent.attr attrs
+      SCALE = Crafty.Box2D.SCALE
+      ent.x = 60
+      ent.body.GetPosition().x.should.equal 60/SCALE
+      ent.body.GetPosition().y.should.equal attrs.y/SCALE
+      ent.x = 80
+      ent.y = 70
+      ent.body.GetPosition().x.should.equal 80/SCALE
+      ent.body.GetPosition().y.should.equal 70/SCALE
 
     it "should only set new position when body exists", ->
       attrs = {x: 30, y: 30}
@@ -124,6 +137,11 @@ describe "CraftyBox Component", ->
       shape = ent.body.GetFixtureList().GetShape()
       shape.should.be.an.instanceof b2CircleShape
 
+    it "should have the correct radius", ->
+      attrs = {x:1800, y: 250, r:30}
+      ent.attr attrs
+      ent.r.should.equal attrs.r
+
     it "should have w and h when creating circle", ->
       attrs = {x:1800, y: 250, r:30}
       ent.attr attrs
@@ -156,10 +174,12 @@ describe "CraftyBox Component", ->
     circle = null
     recAttrs = {x:100, y: 100, w:50, h: 50}
     cirAttrs = {x:100, y: 100, r:50}
+    SCALE = 0
 
     beforeEach ->
       rectangle = Crafty.e("Box2D").attr recAttrs
       circle = Crafty.e("Box2D").attr cirAttrs
+      SCALE = Crafty.Box2D.SCALE
 
     describe ".area()", ->
       it "should return w * h for rectangle", ->
@@ -177,7 +197,14 @@ describe "CraftyBox Component", ->
     describe ".contains(x, y, w, h)", ->
     describe ".pos()", ->
     describe ".mbr()", ->
-    describe ".isAt(x, y)", ->
+    describe ".isAt(x, y) #used for below tests", ->
+      it "should check for both 2D and Box2D", ->
+        # This test would ensure the usage of isAt will cover Box2D also
+        # Any tests below using .isAt will not need to check for both.
+        rectangle.isAt(recAttrs.x, recAttrs.y).should.be.true
+        rectangle.body.GetPosition().x.should.equal (recAttrs.x)/SCALE
+        rectangle.body.GetPosition().y.should.equal (recAttrs.y)/SCALE
+
     describe ".move(dir, by)", ->
       it "should has x and y at the specified location", ->
         amount = 10
@@ -194,28 +221,113 @@ describe "CraftyBox Component", ->
                   .isAt(recAttrs.x, recAttrs.y)
                   .should.be.true
 
-      it "should move Box2D position as well", ->
-        amount = 30
-        SCALE = Crafty.Box2D.SCALE
-        rectangle.move("n", amount)
-                  .body.GetPosition()
-                  .should.eql
-                    x:recAttrs.x/SCALE
-                    y:(recAttrs.y - amount)/SCALE
-
     describe ".shift(x, y, w, h)", ->
+      it "should move the entity by an amount in specified direction", ->
+        rectangle.shift(10)
+                  .isAt(recAttrs.x+10, recAttrs.y)
+                  .should.be.true
+
+        rectangle.shift(-10)
+                  .isAt(recAttrs.x, recAttrs.y)
+                  .should.be.true
+
+        rectangle.shift(-10,10)
+                  .isAt(recAttrs.x-10, recAttrs.y+10)
+                  .should.be.true
+
+      it "should change width and/or height for rectangle", ->
+        rectangle.shift(0,0,10).w.should.equal recAttrs.w+10
+
+        # There is no scaling with Box2D, so to scale, we have to
+        # remove the initial shape, then add a new one.
+        vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+        w = (recAttrs.w + 10) / SCALE
+        h = recAttrs.h / SCALE
+        # Note: vertices are in local cordinates
+        vertices[0].should.eql {x: 0, y: 0}
+        vertices[1].should.eql {x: w, y: 0}
+        vertices[2].should.eql {x: w, y: h}
+        vertices[3].should.eql {x: 0, y: h}
+
+        rectangle.shift(0,0,-10).w.should.equal recAttrs.w
+        vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+        w = (recAttrs.w) / SCALE
+        h = recAttrs.h / SCALE
+        # Note: vertices are in local cordinates
+        vertices[0].should.eql {x: 0, y: 0}
+        vertices[1].should.eql {x: w, y: 0}
+        vertices[2].should.eql {x: w, y: h}
+        vertices[3].should.eql {x: 0, y: h}
+
+        rectangle.shift(0,0,-10, 10).w.should.equal recAttrs.w-10
+        rectangle.h.should.equal recAttrs.h+10
+        vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+        w = (recAttrs.w - 10) / SCALE
+        h = (recAttrs.h + 10) / SCALE
+        # Note: vertices are in local cordinates
+        vertices[0].should.eql {x: 0, y: 0}
+        vertices[1].should.eql {x: w, y: 0}
+        vertices[2].should.eql {x: w, y: h}
+        vertices[3].should.eql {x: 0, y: h}
+
+      it "should change radius for circle", ->
+        circle.shift(0,0,30).r.should.equal cirAttrs.r+30
+        # @w will become 100+30, @h is still 100
+        # Received attr = {_w: 100, _h: 100}
+        circle.body.GetFixtureList().GetShape().GetRadius()
+                    .should.equal (cirAttrs.r+30)/SCALE
+
+      it "should only shift the third param for radius", ->
+        circle.shift(0,0,30,60).r.should.equal cirAttrs.r+30
+        # Both events for w and h will be fired.
+        # First is  {_w: 100, _h: 100} (@w = 130, @h=100) 
+        # Then {_w: 130, _h: 100} (@w = 130, @h=160)
+        circle.body.GetFixtureList().GetShape().GetRadius()
+                    .should.equal (cirAttrs.r+30)/SCALE
+
+        # Never care about the third param
+        circle.shift(0,0,0,60).r.should.equal cirAttrs.r+30
+        circle.body.GetFixtureList().GetShape().GetRadius()
+                    .should.equal (cirAttrs.r+30)/SCALE
+
+      it "should set new width and height for circle", ->
+        circle.shift(0,0,30).w.should.equal (cirAttrs.r+30)*2
+        circle.h.should.equal (cirAttrs.r+30)*2
+
+      it "should not set new width and height for circle when no third param", ->
+        circle.shift(0,0,0,30).w.should.equal cirAttrs.r*2
+        circle.h.should.equal cirAttrs.r*2
+
     describe ".attach(Entity obj[, .., Entity objN])", ->
       it "should move the follower", ->
         attrs = {x:200, y: 200, w:50, h: 50}
         follower = Crafty.e("Box2D").attr(attrs)
         amount = 30
+
         rectangle.attach(follower).move("n", amount)
-        follower.y.should.equal attrs.y - amount
+        follower.isAt(attrs.x, attrs.y - amount).should.be.true
 
     describe ".detach(obj)", ->
+      it "should stop following the rectangle", ->
+        attrs = {x:200, y: 200, w:50, h: 50}
+        follower = Crafty.e("Box2D").attr(attrs)
+        amount = 30
+
+        rectangle.attach(follower).move("n", amount)
+        follower.isAt(attrs.x, attrs.y - amount).should.be.true
+
+        rectangle.detach(follower).move("n", amount)
+        follower.isAt(attrs.x, attrs.y - amount).should.be.true
+
     describe ".origin(x, y)", ->
     describe ".flip(dir)", ->
     describe ".rotate(e)", ->
       
+  describe "creation helpers (.circle, .rectangle, ...)", ->
+    it "should ignore when @body is not defined", ->
+      ent = Crafty.e("Box2D").circle(10)
+      should.not.exist ent.body
+      ent.rectangle(10, 15)
+      should.not.exist ent.body
 
 
