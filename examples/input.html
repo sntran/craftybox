@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Craftybox by noderl</title>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/1.jquery.min.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/2.jquery.tmpl.min.js"></script>
+    <script src=".https://raw.github.com/noderl/craftybox/master/lib/3.coffee.script.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/4.crafty.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/5.box2d.min.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/craftybox.js"></script>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/noderl/craftybox">Fork Me on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Craftybox</h1>
+            <h2>Box2D Components for Crafty.js</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/noderl/craftybox/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/noderl/craftybox/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+      <span class="banner-fix"></span>
+
+      <section id="main_content">
+        <h1>Examples - Input</h1>
+        <p>In this example, I use Crafty's "Fourway" and "Draggable" to demonstrate that input can be used with "Box2D" entity as usual. User WSAD or arrow keys to move. Use mouse to drag.</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/noderl">noderl</a> can be found on <a href="https://github.com/noderl/craftybox">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+    <script>
+      window.onload = function() {
+        Crafty.init(800, 600);
+        Crafty.Box2D.debug = true;
+        
+        var draggable = Crafty.e("Box2D, Fourway, Draggable")
+                  .attr({x:6*30, y:5*30, r: 1*2*30, dynamic: true})
+                  .fourway(10);
+        
+
+      }
+      </script>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-30849064-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>

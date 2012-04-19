@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Craftybox by noderl</title>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/1.jquery.min.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/2.jquery.tmpl.min.js"></script>
+    <script src=".https://raw.github.com/noderl/craftybox/master/lib/3.coffee.script.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/4.crafty.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/lib/5.box2d.min.js"></script>
+    <script src="https://raw.github.com/noderl/craftybox/master/craftybox.js"></script>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/noderl/craftybox">Fork Me on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Craftybox</h1>
+            <h2>Box2D Components for Crafty.js</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/noderl/craftybox/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/noderl/craftybox/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+      <span class="banner-fix"></span>
+
+      <section id="main_content">
+        <h1>Examples - Box2D</h1>
+        <p>I recreate the example from Box2DWeb, but without debugDraw. Instead, I use Crafty's "Canvas" and define a custom draw handler to draw those Box2D entities.</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/noderl">noderl</a> can be found on <a href="https://github.com/noderl/craftybox">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+    <script>
+window.onload = function() {
+  var ACTIVE = "#EDC9C9";
+  var SLEEPING = "#B7B7B7";
+  var STATIC = "#A5EDA5";
+
+  Crafty.init(800, 600);
+  //Crafty.Box2D.debug = true;
+  // Create ground
+  Crafty.e("Box2D, Canvas, Color")
+        .attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30})
+        .color(STATIC);
+      
+  for(var i = 0; i < 10; ++i) {
+    (function() {
+      var x = (Math.random() * 10)*30;
+      var y = (Math.random() * 10)*30;
+      //var components = "Box2D, Canvas, Color";
+      var components = "Box2D, Canvas";
+
+      if(Math.random() > 0.5) {
+        var hW = (Math.random() + 0.1)*30;
+        var hH = (Math.random() + 0.1)*30;
+        var ent = Crafty.e(components)
+              .attr({x:x, y:y, w: hW*2, h: hH*2, dynamic: true});
+
+        // Simulate Box2D's debugDraw
+        ent.ready = true;
+        ent.bind("Draw", function(obj) {
+          obj.ctx.fillStyle = ent.body.IsAwake()? ACTIVE : SLEEPING;
+          obj.ctx.fillRect(obj.pos._x, obj.pos._y, obj.pos._w, obj.pos._h);
+        })
+
+      } else {
+        /*var r = (Math.random() + 0.1)*30;
+        var ent = Crafty.e(components)
+              .attr({x:x, y:y, r:r, dynamic: true});
+
+        // Simulate Box2D's debugDraw
+        ent.ready = true; 
+        ent.bind("Draw", function(obj){
+          obj.ctx.fillStyle = ent.body.IsAwake()? ACTIVE : SLEEPING;
+          obj.ctx.beginPath();
+          centerX = obj.pos._x+obj.pos._w/2;
+          centerY = obj.pos._y+obj.pos._h/2;
+          obj.ctx.arc(centerX, centerY, obj.pos._w/2, 0, Math.PI*2, true);
+          obj.ctx.closePath();
+          obj.ctx.fill();
+        });*/
+      }
+    })();
+  }
+
+  // Default of world's gravity is 0, so to make dynamic entities move
+  // set new gravity here
+  Crafty.Box2D.gravity = {x: 0, y: 10};
+
+}
+</script>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-30849064-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
