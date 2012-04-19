@@ -64,7 +64,7 @@ See `examples` folder for more usuages.
 * Entities can move and rotate
 * Finished Box2D example.
 * Don't recreate body when .attr({x, y}) is called again.
-* Made `.isAt`, `.move`, `.shift`, `.attach`, '.detach' work.
+* Made `.isAt`, `.move`, `.shift`, `.attach`, `.detach` work.
 * More examples.
 * Refactored to allow more usuages.
 * Use Crafty's FPS for Box2D World step.
