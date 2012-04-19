@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - Mouse</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+</head>
+<body>
+<p>In this example, I use Crafty's "Fourway" and "Draggable" to demonstrate that input can be used with "Box2D" entity as usual. User WSAD or arrow keys to move. Use mouse to drag.</p>
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+	Crafty.Box2D.debug = true;
+	
+	// Create ground
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30});
+
+	// Create ball
+	Crafty.e("Box2D, Draggable")
+				.attr({x:3*30, y:2*30, r:1*30, dynamic: true});
+
+	// Raise the gravity
+	Crafty.Box2D.gravity = {x: 0, y: 10};
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+    "name": "CraftyBox",
+    "version": "0.0.3",
+    "title": "Box2D components for Crafty.js",
+    "author": {
+        "name": "Son Tran",
+        "url": "http://sntran.tumblr.com"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://www.opensource.org/licenses/mit-license.php"
+        },
+        {
+            "type": "GPL",
+            "url": "http://www.opensource.org/licenses/gpl-license.php"
+        }
+    ],
+    "description": "Just like 2D, Physics, Gravity, Collision, altogether, but cooler.",
+    "keywords": [
+        "framework",
+        "javascript"
+    ],
+    "jsfiddle" : "http://jsfiddle.net/Esente/H3MfC/embedded/", 
+    "homepage": "https://github.com/noderl/craftybox",
+    "files": [
+        "craftybox.js"
+    ]
+}

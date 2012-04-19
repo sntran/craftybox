@@ -1,5 +1,5 @@
 b2Vec2 = Box2D.Common.Math.b2Vec2
-{b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2DebugDraw} = Box2D.Dynamics
+{b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2DebugDraw, b2ContactListener} = Box2D.Dynamics
 {b2AABB, Shapes: {b2MassData, b2PolygonShape, b2CircleShape}} = Box2D.Collision
 
 ###
@@ -44,6 +44,13 @@ Crafty.extend
       _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
 
       @__defineSetter__('gravity', (v) -> _world.SetGravity(new b2Vec2(v.x, v.y)))
+
+      contactListener = new b2ContactListener
+      contactListener.BeginContact = (contact) ->
+        console.log "something hit something"
+      contactListener.EndContact = (contact) ->
+
+      _world.SetContactListener contactListener
 
       Crafty.bind "EnterFrame", =>
         _world.Step(1/Crafty.timer.getFPS(), 10, 10)

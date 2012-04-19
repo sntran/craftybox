@@ -1,9 +1,9 @@
 (function() {
-  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
+  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2ContactListener, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
 
   b2Vec2 = Box2D.Common.Math.b2Vec2;
 
-  _ref = Box2D.Dynamics, b2BodyDef = _ref.b2BodyDef, b2Body = _ref.b2Body, b2FixtureDef = _ref.b2FixtureDef, b2Fixture = _ref.b2Fixture, b2World = _ref.b2World, b2DebugDraw = _ref.b2DebugDraw;
+  _ref = Box2D.Dynamics, b2BodyDef = _ref.b2BodyDef, b2Body = _ref.b2Body, b2FixtureDef = _ref.b2FixtureDef, b2Fixture = _ref.b2Fixture, b2World = _ref.b2World, b2DebugDraw = _ref.b2DebugDraw, b2ContactListener = _ref.b2ContactListener;
 
   _ref2 = Box2D.Collision, b2AABB = _ref2.b2AABB, (_ref3 = _ref2.Shapes, b2MassData = _ref3.b2MassData, b2PolygonShape = _ref3.b2PolygonShape, b2CircleShape = _ref3.b2CircleShape);
 
@@ -40,7 +40,7 @@
           # with the Box2D component can be created
       */
       init: function(options) {
-        var canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world,
+        var canvas, contactListener, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world,
           _this = this;
         gravityX = (_ref4 = options != null ? options.gravityX : void 0) != null ? _ref4 : 0;
         gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 0;
@@ -50,6 +50,12 @@
         this.__defineSetter__('gravity', function(v) {
           return _world.SetGravity(new b2Vec2(v.x, v.y));
         });
+        contactListener = new b2ContactListener;
+        contactListener.BeginContact = function(contact) {
+          return console.log("something hit something");
+        };
+        contactListener.EndContact = function(contact) {};
+        _world.SetContactListener(contactListener);
         Crafty.bind("EnterFrame", function() {
           _world.Step(1 / Crafty.timer.getFPS(), 10, 10);
           if (_this.debug) _world.DrawDebugData();

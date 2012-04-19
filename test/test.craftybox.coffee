@@ -181,6 +181,10 @@ describe "CraftyBox Component", ->
       circle = Crafty.e("Box2D").attr cirAttrs
       SCALE = Crafty.Box2D.SCALE
 
+    it "should wake up if position change", ->
+      rectangle.body.SetAwake true
+      rectangle.body.IsAwake().should.not.be.true
+
     describe ".area()", ->
       it "should return w * h for rectangle", ->
         rectangle.area().should.equal recAttrs.w*recAttrs.h

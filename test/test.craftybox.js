@@ -310,6 +310,10 @@
         circle = Crafty.e("Box2D").attr(cirAttrs);
         return SCALE = Crafty.Box2D.SCALE;
       });
+      it("should wake up if position change", function() {
+        rectangle.body.SetAwake(true);
+        return rectangle.body.IsAwake().should.not.be["true"];
+      });
       describe(".area()", function() {
         it("should return w * h for rectangle", function() {
           return rectangle.area().should.equal(recAttrs.w * recAttrs.h);
