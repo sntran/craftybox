@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Craftybox by noderl</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/noderl/craftybox">Fork Me on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Craftybox</h1>
+            <h2>Box2D Components for Crafty.js</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/noderl/craftybox/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/noderl/craftybox/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+      <span class="banner-fix"></span>
+
+      <section id="main_content">
+        <h1>CraftyBox</h1>
+
+<p>Here are some components I am working on to help using Box2D in Crafty.js (<a href="http://craftyjs.com/">web</a> | <a href="https://github.com/craftyjs/Crafty">github</a>) engine.</p>
+
+<p>It uses <a href="http://code.google.com/p/box2dweb/">Box2DWeb</a>, which is a JavaScript port from <a href="http://www.box2dflash.org">Box2DFlash</a>, which is a port from the original <a href="http://www.gphysics.com/">Box2D</a> physic engine written in C++.</p>
+
+<p>The components are written in <a href="http://jashkenas.github.com/coffee-script/">CoffeeScript</a>, which speeds up the developing process really quick.</p>
+
+<p>A compiled JS file is available.</p>
+
+<h2>Components</h2>
+
+<ul>
+<li>
+<code>Box2D</code>: intended to replace <code>2D, Physics, Gravity, Collision</code>.</li>
+<li>
+<code>Throwable</code>: intended to replace <code>Draggable</code>. Of course it uses <code>Mouse</code>.</li>
+</ul><h2>Usuage</h2>
+
+<h3>Initialization</h3>
+
+<p>You can initialize after Crafty with a set of optional options:</p>
+
+<div class="highlight">
+<pre><span class="nx">Crafty</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span>
+<span class="nx">Crafty</span><span class="p">.</span><span class="nx">Box2D</span><span class="p">.</span><span class="nx">init</span><span class="p">({</span><span class="nx">gravityX</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">gravityY</span><span class="o">:</span><span class="mi">0</span><span class="p">,</span> <span class="nx">scale</span><span class="o">:</span><span class="mi">30</span><span class="p">,</span> <span class="nx">doSleep</span><span class="o">:</span><span class="kc">true</span><span class="p">})</span>
+</pre>
+</div>
+
+
+<p>The default world has no gravity, allows sleeping, and has a SCALE of 30.</p>
+
+<p>Or it will be initialized when you create a Box2D entity. You cannot set the world's properties at this point, and it will use the default values.</p>
+
+<p>However you can change them through setters anytime after the world is created</p>
+
+<div class="highlight">
+<pre><span class="nx">Crafty</span><span class="p">.</span><span class="nx">Box2D</span><span class="p">.</span><span class="nx">gravity</span> <span class="o">=</span> <span class="p">{</span><span class="nx">x</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">y</span><span class="o">:</span> <span class="mi">10</span><span class="p">}</span>
+<span class="nx">Crafty</span><span class="p">.</span><span class="nx">Box2D</span><span class="p">.</span><span class="nx">SCALE</span> <span class="o">=</span> <span class="mi">1</span>
+</pre>
+</div>
+
+
+<ul>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, w:w, h:h});</code>: A static rectangle</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, w:w, dynamic: true});</code>: A dynamic square</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, h:h, dynamic: true});</code>: also a dynamic square</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, r:r, dynamic: true});</code>: dynamic circle</li>
+</ul><p>You can also indicate <code>density</code>, <code>friction</code>, and <code>restitution</code> if you don't want the default values (1.0, 0.5, 0.2 accordingly).</p>
+
+<p><code>Crafty.e("Box2D").attr({x:x, y:y, w:w, h:h, density: 1.0, friction: 0.5, restitution: 0.2});</code></p>
+
+<p>Some shortcuts:</p>
+
+<ul>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y}).rectangle(w, h);</code>: static rectangle</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, dynamic: true}).rectangle(w, w);</code>: A dynamic square</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, dynamic: true}).rectangle(w);</code>: also a dynamic square</li>
+<li>
+<code>Crafty.e("Box2D").attr({x:x, y:y, dynamic: true}).circle(r);</code>: dynamic circle</li>
+</ul><p>The Box2D world is accessible with <code>Crafty.Box2D.world</code></p>
+
+<p>See <code>examples</code> folder for more usuages.</p>
+
+<h2>Changelogs:</h2>
+
+<h3>v0.0.3</h3>
+
+<ul>
+<li>Added usuage</li>
+<li>Same attributes as of Crafty's 2D component</li>
+<li>Entities can move and rotate</li>
+<li>Finished Box2D example.</li>
+<li>Don't recreate body when .attr({x, y}) is called again.</li>
+<li>Made <code>.isAt</code>, <code>.move</code>, <code>.shift</code>, <code>.attach</code>, <code>.detach</code> work.</li>
+<li>More examples.</li>
+<li>Refactored to allow more usuages.</li>
+<li>Use Crafty's FPS for Box2D World step.</li>
+<li>Remove body from Box2D world before destroying entity.</li>
+</ul><h3>v0.0.2</h3>
+
+<ul>
+<li>Changed the changelog version format :)</li>
+<li>Started writing tests</li>
+<li>Parameters for SetAsBox should be half width, half height</li>
+<li>Can create circle by <code>.attr({x, y, r})</code>
+</li>
+<li>Can specify dynamic body by <code>.attr({x, y, r, dynamic:true})</code>
+</li>
+<li>Added the standard example from Box2D</li>
+</ul><h3>v0.0.1</h3>
+
+<ul>
+<li>Rewrote from scratch.</li>
+<li>Updated Crafty to v0.4.7.</li>
+<li>Updated Coffee-Script compiler to v1.3.1.</li>
+<li>Removed Box2DWorld component.</li>
+<li>Extended Crafty with a Box2D property to act as the world.</li>
+</ul><h2>To Do:</h2>
+
+<ul>
+<li><del>Link between Crafty's 2D attributes and Box2D attributes</del></li>
+<li><del>Make objects move and rotate</del></li>
+<li>Collision</li>
+<li><del><code>.move</code>, <code>.attach</code>, <code>.shift</code>, etc...</del></li>
+<li><del><code>"Mouse"</code>, <code>"Draggable"</code>, <code>"Four-way"</code>, etc...</del></li>
+<li>Throwable</li>
+</ul>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/noderl">noderl</a> can be found on <a href="https://github.com/noderl/craftybox">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-30849064-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
