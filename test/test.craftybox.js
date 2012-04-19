@@ -30,8 +30,8 @@
         return ent = Crafty.e("Box2D");
       });
       afterEach(function() {
-        Crafty.Box2D.destroy();
-        return ent.destroy();
+        ent.destroy();
+        return Crafty.Box2D.destroy();
       });
       it("should not create a body when missing x or y", function() {
         ent.attr({
@@ -289,7 +289,7 @@
         return type.should.equal(b2Body.b2_dynamicBody);
       });
     });
-    return describe("2D Component", function() {
+    describe("2D Component", function() {
       var SCALE, cirAttrs, circle, recAttrs, rectangle;
       rectangle = null;
       circle = null;
@@ -471,6 +471,15 @@
       describe(".origin(x, y)", function() {});
       describe(".flip(dir)", function() {});
       return describe(".rotate(e)", function() {});
+    });
+    return describe("creation helpers (.circle, .rectangle, ...)", function() {
+      return it("should ignore when @body is not defined", function() {
+        var ent;
+        ent = Crafty.e("Box2D").circle(10);
+        should.not.exist(ent.body);
+        ent.rectangle(10, 15);
+        return should.not.exist(ent.body);
+      });
     });
   });
 

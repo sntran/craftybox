@@ -4,6 +4,7 @@ b2Vec2 = Box2D.Common.Math.b2Vec2
 {b2AABB, Shapes: {b2MassData, b2PolygonShape, b2CircleShape}} = Box2D.Collision
 
 describe "CraftyBox Component", ->
+
   describe "when initialized", ->
     it "should set up a world", ->
       should.not.exist Crafty.Box2D.world
@@ -23,8 +24,8 @@ describe "CraftyBox Component", ->
       ent = Crafty.e("Box2D")
 
     afterEach ->
-      Crafty.Box2D.destroy()
       ent.destroy()
+      Crafty.Box2D.destroy()
 
     it "should not create a body when missing x or y", ->
       ent.attr({x:30})
@@ -322,5 +323,11 @@ describe "CraftyBox Component", ->
     describe ".flip(dir)", ->
     describe ".rotate(e)", ->
       
+  describe "creation helpers (.circle, .rectangle, ...)", ->
+    it "should ignore when @body is not defined", ->
+      ent = Crafty.e("Box2D").circle(10)
+      should.not.exist ent.body
+      ent.rectangle(10, 15)
+      should.not.exist ent.body
 
 
