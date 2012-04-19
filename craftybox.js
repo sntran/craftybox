@@ -1,5 +1,5 @@
 (function() {
-  var Circle, Polygon, b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
+  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
 
   b2Vec2 = Box2D.Common.Math.b2Vec2;
 
@@ -40,27 +40,18 @@
           # with the Box2D component can be created
       */
       init: function(options) {
-        var AABB, canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world,
+        var canvas, debugDraw, doSleep, gravityX, gravityY, _ref4, _ref5, _ref6, _ref7, _world,
           _this = this;
         gravityX = (_ref4 = options != null ? options.gravityX : void 0) != null ? _ref4 : 0;
         gravityY = (_ref5 = options != null ? options.gravityY : void 0) != null ? _ref5 : 0;
         this.SCALE = (_ref6 = options != null ? options.scale : void 0) != null ? _ref6 : 30;
         doSleep = (_ref7 = options != null ? options.doSleep : void 0) != null ? _ref7 : true;
-        /*
-              # The world AABB should always be bigger then the region 
-              # where your bodies are located. It is better to make the
-              # world AABB too big than too small. If a body reaches the
-              # boundary of the world AABB it will be frozen and will stop simulating.
-        */
-        AABB = new b2AABB;
-        AABB.lowerBound.Set(-100.0, -100.0);
-        AABB.upperBound.Set(Crafty.viewport.width + 100.0, Crafty.viewport.height + 100.0);
         _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
         this.__defineSetter__('gravity', function(v) {
           return _world.SetGravity(new b2Vec2(v.x, v.y));
         });
         Crafty.bind("EnterFrame", function() {
-          _world.Step(1 / 60, 10, 10);
+          _world.Step(1 / Crafty.timer.getFPS(), 10, 10);
           if (_this.debug) _world.DrawDebugData();
           return _world.ClearForces();
         });
@@ -83,6 +74,12 @@
         }
         return this.world = _world;
       },
+      /*
+          # #Crafty.Box2D.destroy
+          # @comp Crafty.Box2D
+          # @sign public void Crafty.Box2D.destroy(void)
+          # Destroy all the bodies in the world.
+      */
       destroy: function() {
         var body, _results;
         _results = [];
@@ -94,22 +91,6 @@
       }
     }
   });
-
-  Crafty.Box2D.Circle = Circle = (function() {
-
-    function Circle() {}
-
-    return Circle;
-
-  })();
-
-  Crafty.Box2D.Polygon = Polygon = (function() {
-
-    function Polygon() {}
-
-    return Polygon;
-
-  })();
 
   /*
   # #Box2D
@@ -123,6 +104,13 @@
   */
 
   Crafty.c("Box2D", {
+    /*
+      #.body
+      @comp Box2D
+      The `b2Body` from Box2D, created by `Crafty.Box2D.world` during `.attr({x, y})` call.
+      Shape can be attached to it if more params added to `.attr` call, or through
+      `.circle`, `.rectangle`, or `.polygon` method.
+    */
     body: null,
     init: function() {
       var SCALE,
@@ -135,33 +123,38 @@
           That funnction triggers "Change" event for us to set box2d attributes.
       */
       this.bind("Change", function(attrs) {
-        var bodyDef, fixDef, h, w, x, y, _ref10, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+        var bodyDef, h, newH, newW, w, _ref4, _ref5, _ref6, _ref7, _ref8;
         if (!(attrs != null)) return;
         if (_this.body != null) {
-          x = (_ref4 = attrs.x) != null ? _ref4 : _this.x;
-          y = (_ref5 = attrs.y) != null ? _ref5 : _this.y;
-          return _this.body.SetPosition(new b2Vec2(x / SCALE, y / SCALE));
+          if (attrs._x !== _this.x || attrs._y !== _this.y) {
+            _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
+          }
+          if ((newW = attrs._w !== _this.w) || (newH = attrs._h !== _this.h)) {
+            if (!(_this.r != null)) {
+              return _this.rectangle(_this.w / SCALE, _this.h / SCALE);
+            } else if (newW) {
+              _this.r += _this.w - attrs._w;
+              return _this.circle(_this.r);
+            } else {
+              _this._w = attrs._w;
+              return _this._h = attrs._h;
+            }
+          }
         } else if ((attrs.x != null) && (attrs.y != null)) {
           bodyDef = new b2BodyDef;
           bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
           bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
           _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
-          fixDef = new b2FixtureDef;
-          fixDef.density = (_ref6 = attrs.density) != null ? _ref6 : 1.0;
-          fixDef.friction = (_ref7 = attrs.friction) != null ? _ref7 : 0.5;
-          fixDef.restitution = (_ref8 = attrs.restitution) != null ? _ref8 : 0.2;
-          if ((attrs.w != null) || (attrs.h != null)) {
-            w = (_this.w = (_ref9 = attrs.w) != null ? _ref9 : attrs.h) / SCALE;
-            h = (_this.h = (_ref10 = attrs.h) != null ? _ref10 : attrs.w) / SCALE;
-            fixDef.shape = new b2PolygonShape;
-            fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
-            _this.body.CreateFixture(fixDef);
-          }
+          _this.fixDef = new b2FixtureDef;
+          _this.fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
+          _this.fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
+          _this.fixDef.restitution = (_ref6 = attrs.restitution) != null ? _ref6 : 0.2;
           if (attrs.r != null) {
-            _this.w = _this.h = attrs.r * 2;
-            fixDef.shape = new b2CircleShape(attrs.r / SCALE);
-            fixDef.shape.SetLocalPosition(new b2Vec2(_this.w / SCALE / 2, _this.h / SCALE / 2));
-            return _this.body.CreateFixture(fixDef);
+            return _this.circle(attrs.r);
+          } else if ((attrs.w != null) || (attrs.h != null)) {
+            w = (_this.w = (_ref7 = attrs.w) != null ? _ref7 : attrs.h) / SCALE;
+            h = (_this.h = (_ref8 = attrs.h) != null ? _ref8 : attrs.w) / SCALE;
+            return _this.rectangle(w, h);
           }
         }
       });
@@ -177,6 +170,64 @@
           return _this.rotation = Crafty.math.radToDeg(_this.body.GetAngle());
         }
       });
+      /*
+          Remove the body from world before destroying this entity
+      */
+      return this.bind("Remove", function() {
+        if (_this.body != null) return Crafty.Box2D.world.DestroyBody(_this.body);
+      });
+    },
+    /*
+      #.circle
+      @comp Box2D
+      @sign public this .circle(Number radius)
+      @param radius - The radius of the circle to create
+      Attach a circle shape to entity's existing body.
+      @example 
+      ~~~
+      this.attr({x: 10, y: 10, r:10}) // called internally
+      this.attr({x: 10, y: 10}).circle(10) // called explicitly
+      ~~~
+    */
+    circle: function(radius) {
+      var SCALE;
+      if (!(this.body != null)) return this;
+      SCALE = Crafty.Box2D.SCALE;
+      if (this.body.GetFixtureList() != null) {
+        this.body.DestroyFixture(this.body.GetFixtureList());
+      }
+      this._w = this._h = radius * 2;
+      this.fixDef.shape = new b2CircleShape(radius / SCALE);
+      this.fixDef.shape.SetLocalPosition(new b2Vec2(this.w / SCALE / 2, this.h / SCALE / 2));
+      this.body.CreateFixture(this.fixDef);
+      return this;
+    },
+    /*
+      #.rectangle
+      @comp Box2D
+      @sign public this .rectangle(Number w, Number h)
+      @param w - The width of the rectangle to create
+      @param h - The height of the rectangle to create
+      Attach a rectangle or square shape to entity's existing body.
+      @example 
+      ~~~
+      this.attr({x: 10, y: 10, w:10, h: 15}) // called internally
+      this.attr({x: 10, y: 10}).rectangle(10, 15) // called explicitly
+      this.attr({x: 10, y: 10}).rectangle(10, 10) // a square
+      this.attr({x: 10, y: 10}).rectangle(10) // also square!!!
+      ~~~
+    */
+    rectangle: function(w, h) {
+      var SCALE;
+      if (!(this.body != null)) return this;
+      h = h != null ? h : w;
+      SCALE = Crafty.Box2D.SCALE;
+      if (this.body.GetFixtureList() != null) {
+        this.body.DestroyFixture(this.body.GetFixtureList());
+      }
+      this.fixDef.shape = new b2PolygonShape;
+      this.fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
+      this.body.CreateFixture(this.fixDef);
       return this;
     }
   });
