@@ -60,6 +60,7 @@ See `examples` folder for more usuages.
 
 * Collision detection with `.onHit(component, beginContact, endContact)`
 * Added example with collision.
+* Manual collision detection with `.hit(component)`
 
 ### v0.0.3
 
@@ -95,7 +96,9 @@ See `examples` folder for more usuages.
 
 * <del>Link between Crafty's 2D attributes and Box2D attributes</del>
 * <del>Make objects move and rotate</del>
-* Collision
+* <del>Collision - `.hit`, `.onHit`</del>
 * <del>`.move`, `.attach`, `.shift`, etc...</del>
 * <del>`"Mouse"`, `"Draggable"`, `"Four-way"`, etc...</del>
 * Throwable
+* Determine collision strenght
+* Filter collision

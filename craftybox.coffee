@@ -51,10 +51,8 @@ Crafty.extend
       # but let the entities handle the collision.
       contactListener = new b2ContactListener
       contactListener.BeginContact = (contact) ->
-        fixtureA = contact.GetFixtureA()
-        fixtureB = contact.GetFixtureB()
-        bodyA = fixtureA.GetBody()
-        bodyB = fixtureB.GetBody()
+        entityIdA = contact.GetFixtureA().GetBody().GetUserData()
+        entityIdB = contact.GetFixtureB().GetBody().GetUserData()
 
         ## Getting the contact points through manifold
         manifold = new b2WorldManifold()
@@ -62,22 +60,19 @@ Crafty.extend
         contactPoints = manifold.m_points
 
         # Crafty(id) will return the entity with that id.
-        Crafty(bodyA.GetUserData())
-            .trigger "BeginContact",
+        Crafty(entityIdA).trigger "BeginContact",
               points: contactPoints
-              targetId: bodyB.GetUserData()
-        Crafty(bodyB.GetUserData())
-            .trigger "BeginContact", 
+              targetId: entityIdB
+        Crafty(entityIdB).trigger "BeginContact", 
               points: contactPoints
-              targetId: bodyA.GetUserData()
+              targetId: entityIdA
 
       contactListener.EndContact = (contact) ->
-        fixtureA = contact.GetFixtureA()
-        fixtureB = contact.GetFixtureB()
-        bodyA = fixtureA.GetBody()
-        bodyB = fixtureB.GetBody()
-        Crafty(bodyA.GetUserData()).trigger "EndContact"
-        Crafty(bodyB.GetUserData()).trigger "EndContact"
+        entityIdA = contact.GetFixtureA().GetBody().GetUserData()
+        entityIdB = contact.GetFixtureB().GetBody().GetUserData()
+
+        Crafty(entityIdA).trigger "EndContact"
+        Crafty(entityIdB).trigger "EndContact"
 
       _world.SetContactListener contactListener
 
@@ -274,6 +269,44 @@ Crafty.c "Box2D",
     @
 
   ###
+  #.hit
+  @comp Box2D
+  @sign public Boolean/Array hit(String component)
+  @param component - Component to check collisions for
+  @return `false if no collision. If a collision is detected, return an Array of
+  objects that are colliding, with the type of collision, and the contact points.
+  The contact points has at most two points for polygon and one for circle.
+  ~~~
+  [{
+    obj: [entity],
+    type: "Box2D",
+    points: [Vector[, Vector]]
+  }] 
+  ###
+  hit: (component) ->
+    contactEdge = @body.GetContactList()
+    # Return false if no collision at this frame
+    return false if not contactEdge?
+
+    otherId = contactEdge.other.GetUserData()
+    otherEntity = Crafty otherId
+    return false if not otherEntity.has component
+    # A contact edge happens as soon as the two AABBs are touching, not the fixtures.
+    # We only care when the fixture are actually touching.
+    return false if not contactEdge.contact.IsTouching()
+
+    finalresult = []
+
+    ## Getting the contact points through manifold
+    manifold = new b2WorldManifold()
+    contactEdge.contact.GetWorldManifold(manifold)
+    contactPoints = manifold.m_points
+
+    finalresult.push({obj: otherEntity, type: "Box2D", points: contactPoints})
+
+    return finalresult;
+
+  ###
   #.onHit
   @comp Box2D
   @sign public this .onHit(String component, Function beginContact[, Function endContact])
@@ -284,7 +317,7 @@ Crafty.c "Box2D",
   to EnterFrame, but let the contact listener in the Box2D world notify us.
   ###
   onHit: (component, beginContact, endContact) ->
-    return @ if (component isnt "Box2D")
+    return @ if component isnt "Box2D"
 
     # You can't add/destroy bodies and fixtures in BeginContact because this is happening during
     # the time step. Inside BeginContact you will have to make a note of which bodies should
@@ -297,5 +330,7 @@ Crafty.c "Box2D",
       # This is only triggered once per contact, so just execute endContact callback.
       @bind "EndContact", =>
         endContact.call @
+
+    @
 
 

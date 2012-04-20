@@ -18,7 +18,9 @@
 Since a circle is involved in the collision, there is only one pair of contact points.</p>
 
 <input id="target" DISABLED>
-<input id="contact-points" DISABLE>
+<input id="contact-points" DISABLED>
+<input id="hit" DISABLED>
+<input id="hit-contact-points" DISABLED>
 <script>
 window.onload = function() {
 	Crafty.init(800, 600);
@@ -36,9 +38,11 @@ window.onload = function() {
 	var gravityY = 10
 
 	// Create ball
-	Crafty.e("Box2D, Draggable")
+	var ent = Crafty.e("Box2D, Draggable")
 				.attr({x:9*30, y:2*30, r:1*30, dynamic: true})
-				.onHit("Box2D", function(hitData) {
+	
+	// Set callbacks for .onHit to show on the input boxes
+	ent.onHit("Box2D", function(hitData) {
 					var data = hitData[0]
 					$("#target").val(data.obj.name);
 					$("#contact-points").val("x="+data.points[0].x+", y="+data.points[0].y);
@@ -46,6 +50,16 @@ window.onload = function() {
 					Crafty.Box2D.gravity = {x: 0, y: gravityY};
 				}, function() {
 				})
+
+	// Use .hit to check they return the same value
+	ent.bind("EnterFrame", function() {
+		var hitData = ent.hit("Box2D");
+		if (hitData) {
+			var data = hitData[0];
+			$("#hit").val(data.obj.name);
+			$("#hit-contact-points").val("x="+data.points[0].x+", y="+data.points[0].y);
+		}
+	})
 
 	// Raise the gravity
 	Crafty.Box2D.gravity = {x: 0, y: gravityY};

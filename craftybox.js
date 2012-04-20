@@ -52,31 +52,27 @@
         });
         contactListener = new b2ContactListener;
         contactListener.BeginContact = function(contact) {
-          var bodyA, bodyB, contactPoints, fixtureA, fixtureB, manifold;
-          fixtureA = contact.GetFixtureA();
-          fixtureB = contact.GetFixtureB();
-          bodyA = fixtureA.GetBody();
-          bodyB = fixtureB.GetBody();
+          var contactPoints, entityIdA, entityIdB, manifold;
+          entityIdA = contact.GetFixtureA().GetBody().GetUserData();
+          entityIdB = contact.GetFixtureB().GetBody().GetUserData();
           manifold = new b2WorldManifold();
           contact.GetWorldManifold(manifold);
           contactPoints = manifold.m_points;
-          Crafty(bodyA.GetUserData()).trigger("BeginContact", {
+          Crafty(entityIdA).trigger("BeginContact", {
             points: contactPoints,
-            targetId: bodyB.GetUserData()
+            targetId: entityIdB
           });
-          return Crafty(bodyB.GetUserData()).trigger("BeginContact", {
+          return Crafty(entityIdB).trigger("BeginContact", {
             points: contactPoints,
-            targetId: bodyA.GetUserData()
+            targetId: entityIdA
           });
         };
         contactListener.EndContact = function(contact) {
-          var bodyA, bodyB, fixtureA, fixtureB;
-          fixtureA = contact.GetFixtureA();
-          fixtureB = contact.GetFixtureB();
-          bodyA = fixtureA.GetBody();
-          bodyB = fixtureB.GetBody();
-          Crafty(bodyA.GetUserData()).trigger("EndContact");
-          return Crafty(bodyB.GetUserData()).trigger("EndContact");
+          var entityIdA, entityIdB;
+          entityIdA = contact.GetFixtureA().GetBody().GetUserData();
+          entityIdB = contact.GetFixtureB().GetBody().GetUserData();
+          Crafty(entityIdA).trigger("EndContact");
+          return Crafty(entityIdB).trigger("EndContact");
         };
         _world.SetContactListener(contactListener);
         Crafty.bind("EnterFrame", function() {
@@ -261,6 +257,40 @@
       return this;
     },
     /*
+      #.hit
+      @comp Box2D
+      @sign public Boolean/Array hit(String component)
+      @param component - Component to check collisions for
+      @return `false if no collision. If a collision is detected, return an Array of
+      objects that are colliding, with the type of collision, and the contact points.
+      The contact points has at most two points for polygon and one for circle.
+      ~~~
+      [{
+        obj: [entity],
+        type: "Box2D",
+        points: [Vector[, Vector]]
+      }]
+    */
+    hit: function(component) {
+      var contactEdge, contactPoints, finalresult, manifold, otherEntity, otherId;
+      contactEdge = this.body.GetContactList();
+      if (!(contactEdge != null)) return false;
+      otherId = contactEdge.other.GetUserData();
+      otherEntity = Crafty(otherId);
+      if (!otherEntity.has(component)) return false;
+      if (!contactEdge.contact.IsTouching()) return false;
+      finalresult = [];
+      manifold = new b2WorldManifold();
+      contactEdge.contact.GetWorldManifold(manifold);
+      contactPoints = manifold.m_points;
+      finalresult.push({
+        obj: otherEntity,
+        type: "Box2D",
+        points: contactPoints
+      });
+      return finalresult;
+    },
+    /*
       #.onHit
       @comp Box2D
       @sign public this .onHit(String component, Function beginContact[, Function endContact])
@@ -285,10 +315,11 @@
         return beginContact.call(_this, hitData);
       });
       if (typeof endContact === "function") {
-        return this.bind("EndContact", function() {
+        this.bind("EndContact", function() {
           return endContact.call(_this);
         });
       }
+      return this;
     }
   });
 
