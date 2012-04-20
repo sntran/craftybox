@@ -181,10 +181,6 @@ describe "CraftyBox Component", ->
       circle = Crafty.e("Box2D").attr cirAttrs
       SCALE = Crafty.Box2D.SCALE
 
-    it "should wake up if position change", ->
-      rectangle.body.SetAwake true
-      rectangle.body.IsAwake().should.not.be.true
-
     describe ".area()", ->
       it "should return w * h for rectangle", ->
         rectangle.area().should.equal recAttrs.w*recAttrs.h
@@ -333,5 +329,14 @@ describe "CraftyBox Component", ->
       should.not.exist ent.body
       ent.rectangle(10, 15)
       should.not.exist ent.body
+
+  describe "Collision", ->
+    it "should store entity's id to body's user data", ->
+      ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
+      ent.body.GetUserData().should.equal ent[0]
+
+    describe ".onHit(compopent, beginContact, endContact)", ->
+      it "should only check with other Box2D entity", ->
+        ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
 
 

@@ -28,11 +28,10 @@ The default world has no gravity, allows sleeping, and has a SCALE of 30.
 
 Or it will be initialized when you create a Box2D entity. You cannot set the world's properties at this point, and it will use the default values.
 
-However you can change them through setters anytime after the world is created
+However you can change gravity through setter anytime after the world is created
 
 ````javascript
 Crafty.Box2D.gravity = {x: 0, y: 10}
-Crafty.Box2D.SCALE = 1
 ````
 
 * `Crafty.e("Box2D").attr({x:x, y:y, w:w, h:h});`: A static rectangle
@@ -56,6 +55,11 @@ The Box2D world is accessible with `Crafty.Box2D.world`
 See `examples` folder for more usuages.
 
 ## Changelogs:
+
+### v0.0.4
+
+* Collision detection with `.onHit(component, beginContact, endContact)`
+* Added example with collision.
 
 ### v0.0.3
 

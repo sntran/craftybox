@@ -14,22 +14,41 @@
 	<script src="../craftybox.js"></script>
 </head>
 <body>
-<p>In this example, I use Crafty's "Fourway" and "Draggable" to demonstrate that input can be used with "Box2D" entity as usual. User WSAD or arrow keys to move. Use mouse to drag.</p>
+<p>Collision! In this silly example, once the ball touches the ground, gravity will change direction, making it moving all the time. Used .onHit with the same signature as of "Collision" component. The first box tells which wall it hits, and the second tell the contact points.
+Since a circle is involved in the collision, there is only one pair of contact points.</p>
+
+<input id="target" DISABLED>
+<input id="contact-points" DISABLE>
 <script>
 window.onload = function() {
 	Crafty.init(800, 600);
 	Crafty.Box2D.debug = true;
 	
-	// Create ground
 	Crafty.e("Box2D")
-				.attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30});
+				.attr({x:0*30, y:0*30, w: 20*30, h: 1*30, name: "roof"}); // roof
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:15*30, w: 20*30, h: 1*30, name: "floor"}); // ground
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:1*30, w: 1*30, h: 14*30, name: "left"}); // left
+	Crafty.e("Box2D")
+				.attr({x:19*30, y:1*30, w: 1*30, h: 14*30, name: "right"}); // right
+
+	var gravityY = 10
 
 	// Create ball
 	Crafty.e("Box2D, Draggable")
-				.attr({x:3*30, y:2*30, r:1*30, dynamic: true});
+				.attr({x:9*30, y:2*30, r:1*30, dynamic: true})
+				.onHit("Box2D", function(hitData) {
+					var data = hitData[0]
+					$("#target").val(data.obj.name);
+					$("#contact-points").val("x="+data.points[0].x+", y="+data.points[0].y);
+					gravityY *= -1
+					Crafty.Box2D.gravity = {x: 0, y: gravityY};
+				}, function() {
+				})
 
 	// Raise the gravity
-	Crafty.Box2D.gravity = {x: 0, y: 10};
+	Crafty.Box2D.gravity = {x: 0, y: gravityY};
 }
 </script>
 </body>

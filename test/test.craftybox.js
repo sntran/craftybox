@@ -310,10 +310,6 @@
         circle = Crafty.e("Box2D").attr(cirAttrs);
         return SCALE = Crafty.Box2D.SCALE;
       });
-      it("should wake up if position change", function() {
-        rectangle.body.SetAwake(true);
-        return rectangle.body.IsAwake().should.not.be["true"];
-      });
       describe(".area()", function() {
         it("should return w * h for rectangle", function() {
           return rectangle.area().should.equal(recAttrs.w * recAttrs.h);
@@ -476,13 +472,34 @@
       describe(".flip(dir)", function() {});
       return describe(".rotate(e)", function() {});
     });
-    return describe("creation helpers (.circle, .rectangle, ...)", function() {
+    describe("creation helpers (.circle, .rectangle, ...)", function() {
       return it("should ignore when @body is not defined", function() {
         var ent;
         ent = Crafty.e("Box2D").circle(10);
         should.not.exist(ent.body);
         ent.rectangle(10, 15);
         return should.not.exist(ent.body);
+      });
+    });
+    return describe("Collision", function() {
+      it("should store entity's id to body's user data", function() {
+        var ent;
+        ent = Crafty.e("Box2D").attr({
+          x: 30,
+          y: 30,
+          r: 30
+        });
+        return ent.body.GetUserData().should.equal(ent[0]);
+      });
+      return describe(".onHit(compopent, beginContact, endContact)", function() {
+        return it("should only check with other Box2D entity", function() {
+          var ent;
+          return ent = Crafty.e("Box2D").attr({
+            x: 30,
+            y: 30,
+            r: 30
+          });
+        });
       });
     });
   });

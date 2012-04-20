@@ -1,6 +1,6 @@
 b2Vec2 = Box2D.Common.Math.b2Vec2
 {b2BodyDef, b2Body, b2FixtureDef, b2Fixture, b2World, b2DebugDraw, b2ContactListener} = Box2D.Dynamics
-{b2AABB, Shapes: {b2MassData, b2PolygonShape, b2CircleShape}} = Box2D.Collision
+{b2AABB, b2WorldManifold, Shapes: {b2MassData, b2PolygonShape, b2CircleShape}} = Box2D.Collision
 
 ###
 # #Crafty.Box2D
@@ -45,13 +45,43 @@ Crafty.extend
 
       @__defineSetter__('gravity', (v) -> _world.SetGravity(new b2Vec2(v.x, v.y)))
 
+      # Setting up contact listener to notify the concerned entities
+      # based on the ids in their body's user data that we set during
+      # the construction of the body. We don't keep track of the contact
+      # but let the entities handle the collision.
       contactListener = new b2ContactListener
       contactListener.BeginContact = (contact) ->
-        console.log "something hit something"
+        fixtureA = contact.GetFixtureA()
+        fixtureB = contact.GetFixtureB()
+        bodyA = fixtureA.GetBody()
+        bodyB = fixtureB.GetBody()
+
+        ## Getting the contact points through manifold
+        manifold = new b2WorldManifold()
+        contact.GetWorldManifold(manifold)
+        contactPoints = manifold.m_points
+
+        # Crafty(id) will return the entity with that id.
+        Crafty(bodyA.GetUserData())
+            .trigger "BeginContact",
+              points: contactPoints
+              targetId: bodyB.GetUserData()
+        Crafty(bodyB.GetUserData())
+            .trigger "BeginContact", 
+              points: contactPoints
+              targetId: bodyA.GetUserData()
+
       contactListener.EndContact = (contact) ->
+        fixtureA = contact.GetFixtureA()
+        fixtureB = contact.GetFixtureB()
+        bodyA = fixtureA.GetBody()
+        bodyB = fixtureB.GetBody()
+        Crafty(bodyA.GetUserData()).trigger "EndContact"
+        Crafty(bodyB.GetUserData()).trigger "EndContact"
 
       _world.SetContactListener contactListener
 
+      # Update loop
       Crafty.bind "EnterFrame", =>
         _world.Step(1/Crafty.timer.getFPS(), 10, 10)
         _world.DrawDebugData() if @debug
@@ -155,6 +185,9 @@ Crafty.c "Box2D",
         bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
         @body = Crafty.Box2D.world.CreateBody bodyDef
 
+        # Set entity's id to body's user data
+        @body.SetUserData @[0]
+
         @fixDef = new b2FixtureDef          
         @fixDef.density = attrs.density ? 1.0
         @fixDef.friction = attrs.friction ? 0.5
@@ -239,4 +272,30 @@ Crafty.c "Box2D",
     @fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
     @body.CreateFixture @fixDef
     @
+
+  ###
+  #.onHit
+  @comp Box2D
+  @sign public this .onHit(String component, Function beginContact[, Function endContact])
+  @param component - Component to check collisions for
+  @param beginContact - Callback method to execute when collided with component, 
+  @param endContact - Callback method executed once as soon as collision stops
+  Invoke the callback(s) if collision detected through contact listener. We don't bind
+  to EnterFrame, but let the contact listener in the Box2D world notify us.
+  ###
+  onHit: (component, beginContact, endContact) ->
+    return @ if (component isnt "Box2D")
+
+    # You can't add/destroy bodies and fixtures in BeginContact because this is happening during
+    # the time step. Inside BeginContact you will have to make a note of which bodies should
+    # be destroyed, and do the actual destroying after the time step has completed.
+    @bind "BeginContact", (data) =>
+      hitData = [{obj: Crafty(data.targetId), type: "Box2D", points: data.points}]
+      beginContact.call(@, hitData)
+
+    if typeof endContact is "function"
+      # This is only triggered once per contact, so just execute endContact callback.
+      @bind "EndContact", =>
+        endContact.call @
+
 

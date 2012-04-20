@@ -1,11 +1,11 @@
 (function() {
-  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2ContactListener, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, _ref, _ref2, _ref3;
+  var b2AABB, b2Body, b2BodyDef, b2CircleShape, b2ContactListener, b2DebugDraw, b2Fixture, b2FixtureDef, b2MassData, b2PolygonShape, b2Vec2, b2World, b2WorldManifold, _ref, _ref2, _ref3;
 
   b2Vec2 = Box2D.Common.Math.b2Vec2;
 
   _ref = Box2D.Dynamics, b2BodyDef = _ref.b2BodyDef, b2Body = _ref.b2Body, b2FixtureDef = _ref.b2FixtureDef, b2Fixture = _ref.b2Fixture, b2World = _ref.b2World, b2DebugDraw = _ref.b2DebugDraw, b2ContactListener = _ref.b2ContactListener;
 
-  _ref2 = Box2D.Collision, b2AABB = _ref2.b2AABB, (_ref3 = _ref2.Shapes, b2MassData = _ref3.b2MassData, b2PolygonShape = _ref3.b2PolygonShape, b2CircleShape = _ref3.b2CircleShape);
+  _ref2 = Box2D.Collision, b2AABB = _ref2.b2AABB, b2WorldManifold = _ref2.b2WorldManifold, (_ref3 = _ref2.Shapes, b2MassData = _ref3.b2MassData, b2PolygonShape = _ref3.b2PolygonShape, b2CircleShape = _ref3.b2CircleShape);
 
   /*
   # #Crafty.Box2D
@@ -52,9 +52,32 @@
         });
         contactListener = new b2ContactListener;
         contactListener.BeginContact = function(contact) {
-          return console.log("something hit something");
+          var bodyA, bodyB, contactPoints, fixtureA, fixtureB, manifold;
+          fixtureA = contact.GetFixtureA();
+          fixtureB = contact.GetFixtureB();
+          bodyA = fixtureA.GetBody();
+          bodyB = fixtureB.GetBody();
+          manifold = new b2WorldManifold();
+          contact.GetWorldManifold(manifold);
+          contactPoints = manifold.m_points;
+          Crafty(bodyA.GetUserData()).trigger("BeginContact", {
+            points: contactPoints,
+            targetId: bodyB.GetUserData()
+          });
+          return Crafty(bodyB.GetUserData()).trigger("BeginContact", {
+            points: contactPoints,
+            targetId: bodyA.GetUserData()
+          });
         };
-        contactListener.EndContact = function(contact) {};
+        contactListener.EndContact = function(contact) {
+          var bodyA, bodyB, fixtureA, fixtureB;
+          fixtureA = contact.GetFixtureA();
+          fixtureB = contact.GetFixtureB();
+          bodyA = fixtureA.GetBody();
+          bodyB = fixtureB.GetBody();
+          Crafty(bodyA.GetUserData()).trigger("EndContact");
+          return Crafty(bodyB.GetUserData()).trigger("EndContact");
+        };
         _world.SetContactListener(contactListener);
         Crafty.bind("EnterFrame", function() {
           _world.Step(1 / Crafty.timer.getFPS(), 10, 10);
@@ -151,6 +174,7 @@
           bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
           bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
           _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+          _this.body.SetUserData(_this[0]);
           _this.fixDef = new b2FixtureDef;
           _this.fixDef.density = (_ref4 = attrs.density) != null ? _ref4 : 1.0;
           _this.fixDef.friction = (_ref5 = attrs.friction) != null ? _ref5 : 0.5;
@@ -235,6 +259,36 @@
       this.fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
       this.body.CreateFixture(this.fixDef);
       return this;
+    },
+    /*
+      #.onHit
+      @comp Box2D
+      @sign public this .onHit(String component, Function beginContact[, Function endContact])
+      @param component - Component to check collisions for
+      @param beginContact - Callback method to execute when collided with component, 
+      @param endContact - Callback method executed once as soon as collision stops
+      Invoke the callback(s) if collision detected through contact listener. We don't bind
+      to EnterFrame, but let the contact listener in the Box2D world notify us.
+    */
+    onHit: function(component, beginContact, endContact) {
+      var _this = this;
+      if (component !== "Box2D") return this;
+      this.bind("BeginContact", function(data) {
+        var hitData;
+        hitData = [
+          {
+            obj: Crafty(data.targetId),
+            type: "Box2D",
+            points: data.points
+          }
+        ];
+        return beginContact.call(_this, hitData);
+      });
+      if (typeof endContact === "function") {
+        return this.bind("EndContact", function() {
+          return endContact.call(_this);
+        });
+      }
     }
   });
 
