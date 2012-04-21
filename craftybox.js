@@ -21,6 +21,8 @@
           INTERNAL SETUP
       */
 
+      var _SCALE, _setContactListener, _setDebugDraw, _toBeRemoved, _world;
+      _SCALE = 30;
       /*
           # #Crafty.Box2D.world
           # @comp Crafty.Box2D
@@ -31,7 +33,6 @@
           # Crafty.Box2D.gravity = {x: 0, y:10}
       */
 
-      var debug, _setContactListener, _setDebugDraw, _toBeRemoved, _world;
       _world = null;
       /*
           A list of bodies to be destroyed in the next step. Usually during
@@ -87,25 +88,25 @@
           Crafty.stage.elem.appendChild(canvas);
           debugDraw = new b2DebugDraw();
           debugDraw.SetSprite(canvas.getContext('2d'));
-          debugDraw.SetDrawScale(this.SCALE);
+          debugDraw.SetDrawScale(_SCALE);
           debugDraw.SetFillAlpha(0.7);
           debugDraw.SetLineThickness(1.0);
           debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit);
           return _world.SetDebugDraw(debugDraw);
         }
       };
-      /*
-          EXTERNAL INTERFACE
-      */
-
-      /*
-          # #Crafty.Box2D.debug
-          # @comp Crafty.Box2D
-          # This will determine whether to use Box2D's own debug Draw
-      */
-
-      debug = false;
       return {
+        /*
+            EXTERNAL INTERFACE
+        */
+
+        /*
+            # #Crafty.Box2D.debug
+            # @comp Crafty.Box2D
+            # This will determine whether to use Box2D's own debug Draw
+        */
+
+        debug: false,
         /*
             # #Crafty.Box2D.init
             # @comp Crafty.Box2D
@@ -120,7 +121,7 @@
             _this = this;
           gravityX = (_ref3 = options != null ? options.gravityX : void 0) != null ? _ref3 : 0;
           gravityY = (_ref4 = options != null ? options.gravityY : void 0) != null ? _ref4 : 0;
-          this.SCALE = (_ref5 = options != null ? options.scale : void 0) != null ? _ref5 : 30;
+          _SCALE = (_ref5 = options != null ? options.scale : void 0) != null ? _ref5 : 30;
           doSleep = (_ref6 = options != null ? options.doSleep : void 0) != null ? _ref6 : true;
           _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
           this.__defineGetter__('world', function() {
@@ -128,6 +129,12 @@
           });
           this.__defineSetter__('gravity', function(v) {
             return _world.SetGravity(new b2Vec2(v.x, v.y));
+          });
+          this.__defineGetter__('gravity', function() {
+            return _world.GetGravity();
+          });
+          this.__defineGetter__('SCALE', function() {
+            return _SCALE;
           });
           _setContactListener();
           Crafty.bind("EnterFrame", function() {
@@ -253,8 +260,7 @@
         if ((_this.body != null) && _this.body.IsAwake()) {
           pos = _this.body.GetPosition();
           _this._x = pos.x * SCALE;
-          _this._y = pos.y * SCALE;
-          return _this._rotate(Crafty.math.radToDeg(_this.body.GetAngle()));
+          return _this._y = pos.y * SCALE;
         }
       });
       /*
@@ -401,8 +407,7 @@
         });
       }
       return this;
-    },
-    gravity: function(component) {}
+    }
   });
 
 }).call(this);

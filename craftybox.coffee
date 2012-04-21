@@ -13,6 +13,8 @@ Crafty.extend
     INTERNAL SETUP
     ###
 
+    _SCALE = 30
+
     ###
     # #Crafty.Box2D.world
     # @comp Crafty.Box2D
@@ -66,7 +68,7 @@ Crafty.extend
       _world.SetContactListener contactListener
 
     # Setting up debug draw. Setting @debug outside will trigger drawing
-    _setDebugDraw = ->      
+    _setDebugDraw = -> 
       if Crafty.support.canvas
         canvas = document.createElement "canvas"
         canvas.id = "Box2DCanvasDebug"
@@ -80,7 +82,7 @@ Crafty.extend
 
         debugDraw = new b2DebugDraw()
         debugDraw.SetSprite canvas.getContext('2d')
-        debugDraw.SetDrawScale @SCALE
+        debugDraw.SetDrawScale _SCALE
         debugDraw.SetFillAlpha 0.7
         debugDraw.SetLineThickness 1.0
         debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit)
@@ -96,7 +98,7 @@ Crafty.extend
     # @comp Crafty.Box2D
     # This will determine whether to use Box2D's own debug Draw
     ###
-    debug = false
+    debug: false
 
     ###
     # #Crafty.Box2D.init
@@ -109,20 +111,22 @@ Crafty.extend
     init: (options) ->
       gravityX = options?.gravityX ? 0
       gravityY = options?.gravityY ? 0
-      @SCALE = options?.scale ? 30
+      _SCALE = options?.scale ? 30
       doSleep = options?.doSleep ? true
 
       _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
 
       @__defineGetter__ 'world', () -> _world
       @__defineSetter__ 'gravity', (v) -> _world.SetGravity new b2Vec2(v.x, v.y)
+      @__defineGetter__ 'gravity', () -> _world.GetGravity()
+      @__defineGetter__ 'SCALE', () -> _SCALE
 
       _setContactListener()
 
       # Update loop
       Crafty.bind "EnterFrame", =>
-        _world.Step(1/Crafty.timer.getFPS(), 10, 10)
-        _world.DestroyBody(body) for body in _toBeRemoved
+        _world.Step 1/Crafty.timer.getFPS(), 10, 10
+        _world.DestroyBody body for body in _toBeRemoved
         _world.DrawDebugData() if @debug
         _world.ClearForces()
 
@@ -237,7 +241,7 @@ Crafty.c "Box2D",
         # Not use setters to avoid Change event
         @_x = pos.x*SCALE
         @_y = pos.y*SCALE
-        @_rotate Crafty.math.radToDeg(@body.GetAngle())
+        #@_rotate Crafty.math.radToDeg(@body.GetAngle())
 
     ###
     Add this body to a list to be destroyed on the next step.
@@ -364,7 +368,4 @@ Crafty.c "Box2D",
         endContact.call @
 
     @
-
-  gravity: (component) ->
-
 
