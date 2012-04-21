@@ -8,47 +8,36 @@ b2Vec2 = Box2D.Common.Math.b2Vec2
 # Dealing with Box2D
 ###
 Crafty.extend
-  Box2D:
+  Box2D: (->
+    ###
+    INTERNAL SETUP
+    ###
+
     ###
     # #Crafty.Box2D.world
     # @comp Crafty.Box2D
-    # This will return the Box2D world object,
+    # This will return the Box2D world object through a getter,
     # which is a container for bodies and joints.
     # It will have 0 gravity when initialized.
     # Gravity can be set through a setter:
     # Crafty.Box2D.gravity = {x: 0, y:10}
     ###
-    world: null
+    _world = null
 
     ###
-    # #Crafty.Box2D.debug
-    # @comp Crafty.Box2D
-    # This will determine whether to use Box2D's own debug Draw
+    A list of bodies to be destroyed in the next step. Usually during
+    collision step, it's bad to destroy bodies. 
     ###
-    debug: false
+    _toBeRemoved = []
 
+    ### 
+    Setting up contact listener to notify the concerned entities
+    based on the ids in their body's user data that we set during
+    the construction of the body. We don't keep track of the contact
+    but let the entities handle the collision.
     ###
-    # #Crafty.Box2D.init
-    # @comp Crafty.Box2D
-    # @sign public void Crafty.Box2D.init(params)
-    # @param options: An object contain settings for the world
-    # Create a Box2D world. Must be called before any entities
-    # with the Box2D component can be created
-    ###
-    init: (options) ->
-      gravityX = options?.gravityX ? 0
-      gravityY = options?.gravityY ? 0
-      @SCALE = options?.scale ? 30
-      doSleep = options?.doSleep ? true
-
-      _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
-
-      @__defineSetter__('gravity', (v) -> _world.SetGravity(new b2Vec2(v.x, v.y)))
-
-      # Setting up contact listener to notify the concerned entities
-      # based on the ids in their body's user data that we set during
-      # the construction of the body. We don't keep track of the contact
-      # but let the entities handle the collision.
+    _setContactListener = ->
+      
       contactListener = new b2ContactListener
       contactListener.BeginContact = (contact) ->
         entityIdA = contact.GetFixtureA().GetBody().GetUserData()
@@ -76,13 +65,8 @@ Crafty.extend
 
       _world.SetContactListener contactListener
 
-      # Update loop
-      Crafty.bind "EnterFrame", =>
-        _world.Step(1/Crafty.timer.getFPS(), 10, 10)
-        _world.DrawDebugData() if @debug
-        _world.ClearForces()
-
-      # Setting up debug draw. Setting @debug outside will trigger drawing
+    # Setting up debug draw. Setting @debug outside will trigger drawing
+    _setDebugDraw = ->      
       if Crafty.support.canvas
         canvas = document.createElement "canvas"
         canvas.id = "Box2DCanvasDebug"
@@ -102,18 +86,65 @@ Crafty.extend
         debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit)
         _world.SetDebugDraw debugDraw
 
-      @world = _world
 
     ###
-    # #Crafty.Box2D.destroy
-    # @comp Crafty.Box2D
-    # @sign public void Crafty.Box2D.destroy(void)
-    # Destroy all the bodies in the world.
+    EXTERNAL INTERFACE
     ###
-    destroy: ->
-      while (body = @world.GetBodyList())?
-        @world.DestroyBody(body)
-        body = body.GetNext()
+
+    ###
+    # #Crafty.Box2D.debug
+    # @comp Crafty.Box2D
+    # This will determine whether to use Box2D's own debug Draw
+    ###
+    debug = false
+
+    ###
+    # #Crafty.Box2D.init
+    # @comp Crafty.Box2D
+    # @sign public void Crafty.Box2D.init(params)
+    # @param options: An object contain settings for the world
+    # Create a Box2D world. Must be called before any entities
+    # with the Box2D component can be created
+    ###
+    init: (options) ->
+      gravityX = options?.gravityX ? 0
+      gravityY = options?.gravityY ? 0
+      @SCALE = options?.scale ? 30
+      doSleep = options?.doSleep ? true
+
+      _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
+
+      @__defineGetter__ 'world', () -> _world
+      @__defineSetter__ 'gravity', (v) -> _world.SetGravity new b2Vec2(v.x, v.y)
+
+      _setContactListener()
+
+      # Update loop
+      Crafty.bind "EnterFrame", =>
+        _world.Step(1/Crafty.timer.getFPS(), 10, 10)
+        _world.DestroyBody(body) for body in _toBeRemoved
+        _world.DrawDebugData() if @debug
+        _world.ClearForces()
+
+      _setDebugDraw()
+
+    ###
+    #Crafty.Box2D.destroy
+    @comp Crafty.Box2D
+    @sign public void Crafty.Box2D.destroy(void)
+    @param body - The body to be destroyed. Destroy all if none
+    Destroy all the bodies in the world. Internally, add to a list to destroy
+    on the next step to avoid collision step.
+    ###
+    destroy: (body)->
+      if body?
+        _toBeRemoved.push(body)
+      else
+        while (body = _world.GetBodyList())?
+          _world.DestroyBody(body)
+          body = body.GetNext()
+
+  )() # End Box2D module
 
 ###
 # #Box2D
@@ -206,13 +237,14 @@ Crafty.c "Box2D",
         # Not use setters to avoid Change event
         @_x = pos.x*SCALE
         @_y = pos.y*SCALE
-        @rotation = Crafty.math.radToDeg @body.GetAngle()
+        @_rotate Crafty.math.radToDeg(@body.GetAngle())
 
     ###
-    Remove the body from world before destroying this entity
+    Add this body to a list to be destroyed on the next step.
+    This is to prevent destroying the bodies during collision.
     ###
     @bind "Remove", =>
-      Crafty.Box2D.world.DestroyBody(@body) if @body?
+      Crafty.Box2D.destroy(@body) if @body?
 
   ###
   #.circle
@@ -332,5 +364,7 @@ Crafty.c "Box2D",
         endContact.call @
 
     @
+
+  gravity: (component) ->
 
 
