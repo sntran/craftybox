@@ -44,6 +44,8 @@ describe "CraftyBox Component", ->
       ent.body.GetPosition().x.should.equal attrs.x/SCALE
       ent.body.GetPosition().y.should.equal attrs.y/SCALE
 
+    it "should not create a new body when .attr is called again with x and y", ->
+
     it "should change position when changing x or y", ->
       attrs = {x: 30, y: 30}
       ent.attr attrs

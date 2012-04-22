@@ -8,9 +8,9 @@ b2Vec2 = Box2D.Common.Math.b2Vec2
 # Dealing with Box2D
 ###
 Crafty.extend
-  Box2D: (->
+  Box2D: do ->
     ###
-    INTERNAL SETUP
+    PRIVATE
     ###
 
     _SCALE = 30
@@ -47,7 +47,7 @@ Crafty.extend
 
         ## Getting the contact points through manifold
         manifold = new b2WorldManifold()
-        contact.GetWorldManifold(manifold)
+        contact.GetWorldManifold manifold
         contactPoints = manifold.m_points
 
         # Crafty(id) will return the entity with that id.
@@ -81,16 +81,16 @@ Crafty.extend
         Crafty.stage.elem.appendChild canvas
 
         debugDraw = new b2DebugDraw()
-        debugDraw.SetSprite canvas.getContext('2d')
+        debugDraw.SetSprite canvas.getContext '2d'
         debugDraw.SetDrawScale _SCALE
         debugDraw.SetFillAlpha 0.7
         debugDraw.SetLineThickness 1.0
-        debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit)
+        debugDraw.SetFlags b2DebugDraw.e_shapeBit | b2DebugDraw.e_joinBit
         _world.SetDebugDraw debugDraw
 
 
     ###
-    EXTERNAL INTERFACE
+    PUBLIC
     ###
 
     ###
@@ -117,7 +117,14 @@ Crafty.extend
       _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
 
       @__defineGetter__ 'world', () -> _world
-      @__defineSetter__ 'gravity', (v) -> _world.SetGravity new b2Vec2(v.x, v.y)
+      @__defineSetter__ 'gravity', (v) -> 
+        _world.SetGravity new b2Vec2(v.x, v.y)
+
+        body = _world.GetBodyList()
+        while body?
+          body.SetAwake(true)
+          body = body.GetNext()
+
       @__defineGetter__ 'gravity', () -> _world.GetGravity()
       @__defineGetter__ 'SCALE', () -> _SCALE
 
@@ -135,20 +142,19 @@ Crafty.extend
     ###
     #Crafty.Box2D.destroy
     @comp Crafty.Box2D
-    @sign public void Crafty.Box2D.destroy(void)
+    @sign public void Crafty.Box2D.destroy([b2Body body])
     @param body - The body to be destroyed. Destroy all if none
     Destroy all the bodies in the world. Internally, add to a list to destroy
     on the next step to avoid collision step.
     ###
     destroy: (body)->
       if body?
-        _toBeRemoved.push(body)
+        _toBeRemoved.push body
       else
-        while (body = _world.GetBodyList())?
-          _world.DestroyBody(body)
+        body = _world.GetBodyList()
+        while body?
+          _world.DestroyBody body
           body = body.GetNext()
-
-  )() # End Box2D module
 
 ###
 # #Box2D
@@ -160,7 +166,75 @@ Crafty.extend
 # friction, density, etc is also required. Then create shapes on the body.
 # The body will be created during the .attr call instead of init.
 ###
-Crafty.c "Box2D",
+Crafty.c "Box2D", do ->
+  ###
+  PRIVATE
+  ###
+
+  _entity = null
+  _body = null
+  _fixDef = null
+
+  _createBody = (attrs) ->
+    SCALE = Crafty.Box2D.SCALE
+    # Creating a new body requires both x and y, and  ( (w and h) or r)
+    bodyDef = new b2BodyDef
+    bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
+    # The body position is the place where it will draw
+    bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
+    _entity.body = Crafty.Box2D.world.CreateBody bodyDef
+    _entity.body.SetAwake(attrs.dynamic?)
+
+    # Set entity's id to body's user data
+    # Needed for collision detection
+    _entity.body.SetUserData _entity[0]
+
+    _fixDef = _fixDef ? new b2FixtureDef          
+    _fixDef.density = attrs.density ? 1.0 # how heavy it is in relation to its area
+    _fixDef.friction = attrs.friction ? 0.5 # how slippery it is
+    _fixDef.restitution = attrs.restitution ? 0.2 # how bouncy the fixture is
+
+    if attrs.r?
+      _circle attrs.r
+
+    else if attrs.w? or attrs.h?
+      # Need to set same @w or same @h if only one param is provided
+      w = (_entity.w = attrs.w ? attrs.h) / SCALE
+      h = (_entity.h = attrs.h ? attrs.w) / SCALE
+      _rectangle w, h
+
+  _circle = (radius) ->
+    return _entity if not _entity.body?
+    SCALE = Crafty.Box2D.SCALE
+    # Remove any old fixture
+    if _entity.body.GetFixtureList()?
+      _entity.body.DestroyFixture _entity.body.GetFixtureList()
+
+    # Not use setters to avoid Change event
+    _entity._w = _entity._h = radius*2
+    _fixDef.shape = new b2CircleShape radius/SCALE
+    _fixDef.shape.SetLocalPosition new b2Vec2 _entity.w/SCALE/2, _entity.h/SCALE/2
+    _entity.body.CreateFixture _fixDef
+    _entity
+
+  _rectangle = (w, h) ->
+    return _entity if not _entity.body?
+    h = h ? w
+    SCALE = Crafty.Box2D.SCALE
+    # Remove any old fixture
+    if _entity.body.GetFixtureList()?
+      _entity.body.DestroyFixture _entity.body.GetFixtureList()
+
+    _fixDef.shape = new b2PolygonShape
+    _fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
+    _entity.body.CreateFixture _fixDef
+    _entity
+
+
+  ###
+  PUBLIC
+  ###
+
   ###
   #.body
   @comp Box2D
@@ -171,6 +245,7 @@ Crafty.c "Box2D",
   body: null
 
   init: ->
+    _entity = @
     @addComponent "2D"
     Crafty.Box2D.init() if not Crafty.Box2D.world?
     SCALE = Crafty.Box2D.SCALE
@@ -181,56 +256,14 @@ Crafty.c "Box2D",
     ###
     @bind "Change", (attrs) =>
       return if not attrs?
-      if @body?
-        # When individual attributes are set through 2d._attr(), which always
-        # send {_x, _y, _w, _h}, the attributes before change.
-        if attrs._x isnt @x or attrs._y isnt @y
-          # When changing position
-          @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
-        
-        if (newW = attrs._w isnt @w) or (newH = attrs._h isnt @h)
-          # Reseting w and h is to resize, but Box2D does not scale.
-          # When resizing, need to destroy initial shape, then add a new one
+      if attrs.x? and attrs.y?
+        _createBody(attrs)
 
-          if not @r?
-            @rectangle @w / SCALE, @h / SCALE
-
-          else if newW
-            # Shifting circle radius will only take the third param, which is the _w
-            # or the _h if _w is not change. The other param is ignored.
-            # See test cases for examples.
-            @r += @w-attrs._w
-            @circle(@r)
-
-          else
-            ## When being a circle but a new height is being set
-            ## Set test cases for more detail
-            @_w = attrs._w
-            @_h = attrs._h
-
-      else if attrs.x? and attrs.y?
-        # Creating a new body requires both x and y, and  ( (w and h) or r)
-        bodyDef = new b2BodyDef
-        bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
-        bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
-        @body = Crafty.Box2D.world.CreateBody bodyDef
-
-        # Set entity's id to body's user data
-        @body.SetUserData @[0]
-
-        @fixDef = new b2FixtureDef          
-        @fixDef.density = attrs.density ? 1.0
-        @fixDef.friction = attrs.friction ? 0.5
-        @fixDef.restitution = attrs.restitution ? 0.2
-
-        if attrs.r?
-          @circle(attrs.r)
-
-        else if attrs.w? or attrs.h?
-          # Need to set same @w or same @h if only one param is provided
-          w = (@w = attrs.w ? attrs.h) / SCALE
-          h = (@h = attrs.h ? attrs.w) / SCALE
-          @rectangle w, h
+    @bind "Move", ({_x, _y, _w, _h}) =>
+      return if not @body?
+      ###if _x isnt @x or _y isnt @y
+        #@body.SetAwake(true)
+        @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))###
 
     ###
     Update the entity by using Box2D's attributes.
@@ -238,17 +271,18 @@ Crafty.c "Box2D",
     @bind "EnterFrame", =>
       if @body? and @body.IsAwake()
         pos = @body.GetPosition()
-        # Not use setters to avoid Change event
-        @_x = pos.x*SCALE
-        @_y = pos.y*SCALE
-        #@_rotate Crafty.math.radToDeg(@body.GetAngle())
+        angle = Crafty.math.radToDeg(@body.GetAngle())
+
+        @x = pos.x*SCALE if pos.x*SCALE isnt @x
+        @y = pos.y*SCALE if pos.y*SCALE isnt @y
+        @rotation = angle if angle isnt @rotation
 
     ###
     Add this body to a list to be destroyed on the next step.
     This is to prevent destroying the bodies during collision.
     ###
     @bind "Remove", =>
-      Crafty.Box2D.destroy(@body) if @body?
+      Crafty.Box2D.destroy @body if @body?
 
   ###
   #.circle
@@ -262,19 +296,7 @@ Crafty.c "Box2D",
   this.attr({x: 10, y: 10}).circle(10) // called explicitly
   ~~~
   ###
-  circle: (radius) ->
-    return @ if not @body?
-    SCALE = Crafty.Box2D.SCALE
-    # Remove any old fixture
-    if @body.GetFixtureList()?
-      @body.DestroyFixture @body.GetFixtureList()
-
-    # Not use setters to avoid Change event
-    @_w = @_h = radius*2
-    @fixDef.shape = new b2CircleShape radius/SCALE
-    @fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
-    @body.CreateFixture @fixDef
-    @
+  circle: _circle
 
   ###
   #.rectangle
@@ -291,18 +313,7 @@ Crafty.c "Box2D",
   this.attr({x: 10, y: 10}).rectangle(10) // also square!!!
   ~~~
   ###
-  rectangle: (w, h) ->
-    return @ if not @body?
-    h = h ? w
-    SCALE = Crafty.Box2D.SCALE
-    # Remove any old fixture
-    if @body.GetFixtureList()?
-      @body.DestroyFixture @body.GetFixtureList()
-
-    @fixDef.shape = new b2PolygonShape
-    @fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
-    @body.CreateFixture @fixDef
-    @
+  rectangle: _rectangle
 
   ###
   #.hit
@@ -368,4 +379,3 @@ Crafty.c "Box2D",
         endContact.call @
 
     @
-

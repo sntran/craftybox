@@ -58,9 +58,11 @@ See `examples` folder for more usuages.
 
 ### v0.0.4
 
-* Collision detection with `.onHit(component, beginContact, endContact)`
+* Collision detection with `.onHit(component, beginContact, endContact)`.
 * Added example with collision.
-* Manual collision detection with `.hit(component)`
+* Manual collision detection with `.hit(component)`.
+* Refactored to use module pattern.
+* Changing gravity should wake up all bodies.
 
 ### v0.0.3
 

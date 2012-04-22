@@ -18,7 +18,7 @@
   Crafty.extend({
     Box2D: (function() {
       /*
-          INTERNAL SETUP
+          PRIVATE
       */
 
       var _SCALE, _setContactListener, _setDebugDraw, _toBeRemoved, _world;
@@ -97,7 +97,7 @@
       };
       return {
         /*
-            EXTERNAL INTERFACE
+            PUBLIC
         */
 
         /*
@@ -128,7 +128,15 @@
             return _world;
           });
           this.__defineSetter__('gravity', function(v) {
-            return _world.SetGravity(new b2Vec2(v.x, v.y));
+            var body, _results;
+            _world.SetGravity(new b2Vec2(v.x, v.y));
+            body = _world.GetBodyList();
+            _results = [];
+            while (body != null) {
+              body.SetAwake(true);
+              _results.push(body = body.GetNext());
+            }
+            return _results;
           });
           this.__defineGetter__('gravity', function() {
             return _world.GetGravity();
@@ -154,7 +162,7 @@
         /*
             #Crafty.Box2D.destroy
             @comp Crafty.Box2D
-            @sign public void Crafty.Box2D.destroy(void)
+            @sign public void Crafty.Box2D.destroy([b2Body body])
             @param body - The body to be destroyed. Destroy all if none
             Destroy all the bodies in the world. Internally, add to a list to destroy
             on the next step to avoid collision step.
@@ -165,8 +173,9 @@
           if (body != null) {
             return _toBeRemoved.push(body);
           } else {
+            body = _world.GetBodyList();
             _results = [];
-            while ((body = _world.GetBodyList()) != null) {
+            while (body != null) {
               _world.DestroyBody(body);
               _results.push(body = body.GetNext());
             }
@@ -189,225 +198,252 @@
   */
 
 
-  Crafty.c("Box2D", {
+  Crafty.c("Box2D", (function() {
     /*
-      #.body
-      @comp Box2D
-      The `b2Body` from Box2D, created by `Crafty.Box2D.world` during `.attr({x, y})` call.
-      Shape can be attached to it if more params added to `.attr` call, or through
-      `.circle`, `.rectangle`, or `.polygon` method.
+      PRIVATE
     */
 
-    body: null,
-    init: function() {
-      var SCALE,
-        _this = this;
-      this.addComponent("2D");
-      if (!(Crafty.Box2D.world != null)) {
-        Crafty.Box2D.init();
+    var _body, _circle, _createBody, _entity, _fixDef, _rectangle;
+    _entity = null;
+    _body = null;
+    _fixDef = null;
+    _createBody = function(attrs) {
+      var SCALE, bodyDef, h, w, _ref3, _ref4, _ref5, _ref6, _ref7;
+      SCALE = Crafty.Box2D.SCALE;
+      bodyDef = new b2BodyDef;
+      bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
+      bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
+      _entity.body = Crafty.Box2D.world.CreateBody(bodyDef);
+      _entity.body.SetAwake(attrs.dynamic != null);
+      _entity.body.SetUserData(_entity[0]);
+      _fixDef = _fixDef != null ? _fixDef : new b2FixtureDef;
+      _fixDef.density = (_ref3 = attrs.density) != null ? _ref3 : 1.0;
+      _fixDef.friction = (_ref4 = attrs.friction) != null ? _ref4 : 0.5;
+      _fixDef.restitution = (_ref5 = attrs.restitution) != null ? _ref5 : 0.2;
+      if (attrs.r != null) {
+        return _circle(attrs.r);
+      } else if ((attrs.w != null) || (attrs.h != null)) {
+        w = (_entity.w = (_ref6 = attrs.w) != null ? _ref6 : attrs.h) / SCALE;
+        h = (_entity.h = (_ref7 = attrs.h) != null ? _ref7 : attrs.w) / SCALE;
+        return _rectangle(w, h);
+      }
+    };
+    _circle = function(radius) {
+      var SCALE;
+      if (!(_entity.body != null)) {
+        return _entity;
       }
       SCALE = Crafty.Box2D.SCALE;
-      /*
-          Box2D entity is created by calling .attr({x, y, w, h}) or .attr({x, y, r}).
-          That funnction triggers "Change" event for us to set box2d attributes.
-      */
-
-      this.bind("Change", function(attrs) {
-        var bodyDef, h, newH, newW, w, _ref3, _ref4, _ref5, _ref6, _ref7;
-        if (!(attrs != null)) {
-          return;
-        }
-        if (_this.body != null) {
-          if (attrs._x !== _this.x || attrs._y !== _this.y) {
-            _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
-          }
-          if ((newW = attrs._w !== _this.w) || (newH = attrs._h !== _this.h)) {
-            if (!(_this.r != null)) {
-              return _this.rectangle(_this.w / SCALE, _this.h / SCALE);
-            } else if (newW) {
-              _this.r += _this.w - attrs._w;
-              return _this.circle(_this.r);
-            } else {
-              _this._w = attrs._w;
-              return _this._h = attrs._h;
-            }
-          }
-        } else if ((attrs.x != null) && (attrs.y != null)) {
-          bodyDef = new b2BodyDef;
-          bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
-          bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
-          _this.body = Crafty.Box2D.world.CreateBody(bodyDef);
-          _this.body.SetUserData(_this[0]);
-          _this.fixDef = new b2FixtureDef;
-          _this.fixDef.density = (_ref3 = attrs.density) != null ? _ref3 : 1.0;
-          _this.fixDef.friction = (_ref4 = attrs.friction) != null ? _ref4 : 0.5;
-          _this.fixDef.restitution = (_ref5 = attrs.restitution) != null ? _ref5 : 0.2;
-          if (attrs.r != null) {
-            return _this.circle(attrs.r);
-          } else if ((attrs.w != null) || (attrs.h != null)) {
-            w = (_this.w = (_ref6 = attrs.w) != null ? _ref6 : attrs.h) / SCALE;
-            h = (_this.h = (_ref7 = attrs.h) != null ? _ref7 : attrs.w) / SCALE;
-            return _this.rectangle(w, h);
-          }
-        }
-      });
-      /*
-          Update the entity by using Box2D's attributes.
-      */
-
-      this.bind("EnterFrame", function() {
-        var pos;
-        if ((_this.body != null) && _this.body.IsAwake()) {
-          pos = _this.body.GetPosition();
-          _this._x = pos.x * SCALE;
-          return _this._y = pos.y * SCALE;
-        }
-      });
-      /*
-          Add this body to a list to be destroyed on the next step.
-          This is to prevent destroying the bodies during collision.
-      */
-
-      return this.bind("Remove", function() {
-        if (_this.body != null) {
-          return Crafty.Box2D.destroy(_this.body);
-        }
-      });
-    },
-    /*
-      #.circle
-      @comp Box2D
-      @sign public this .circle(Number radius)
-      @param radius - The radius of the circle to create
-      Attach a circle shape to entity's existing body.
-      @example 
-      ~~~
-      this.attr({x: 10, y: 10, r:10}) // called internally
-      this.attr({x: 10, y: 10}).circle(10) // called explicitly
-      ~~~
-    */
-
-    circle: function(radius) {
-      var SCALE;
-      if (!(this.body != null)) {
-        return this;
+      if (_entity.body.GetFixtureList() != null) {
+        _entity.body.DestroyFixture(_entity.body.GetFixtureList());
       }
-      SCALE = Crafty.Box2D.SCALE;
-      if (this.body.GetFixtureList() != null) {
-        this.body.DestroyFixture(this.body.GetFixtureList());
-      }
-      this._w = this._h = radius * 2;
-      this.fixDef.shape = new b2CircleShape(radius / SCALE);
-      this.fixDef.shape.SetLocalPosition(new b2Vec2(this.w / SCALE / 2, this.h / SCALE / 2));
-      this.body.CreateFixture(this.fixDef);
-      return this;
-    },
-    /*
-      #.rectangle
-      @comp Box2D
-      @sign public this .rectangle(Number w, Number h)
-      @param w - The width of the rectangle to create
-      @param h - The height of the rectangle to create
-      Attach a rectangle or square shape to entity's existing body.
-      @example 
-      ~~~
-      this.attr({x: 10, y: 10, w:10, h: 15}) // called internally
-      this.attr({x: 10, y: 10}).rectangle(10, 15) // called explicitly
-      this.attr({x: 10, y: 10}).rectangle(10, 10) // a square
-      this.attr({x: 10, y: 10}).rectangle(10) // also square!!!
-      ~~~
-    */
-
-    rectangle: function(w, h) {
+      _entity._w = _entity._h = radius * 2;
+      _fixDef.shape = new b2CircleShape(radius / SCALE);
+      _fixDef.shape.SetLocalPosition(new b2Vec2(_entity.w / SCALE / 2, _entity.h / SCALE / 2));
+      _entity.body.CreateFixture(_fixDef);
+      return _entity;
+    };
+    _rectangle = function(w, h) {
       var SCALE;
-      if (!(this.body != null)) {
-        return this;
+      if (!(_entity.body != null)) {
+        return _entity;
       }
       h = h != null ? h : w;
       SCALE = Crafty.Box2D.SCALE;
-      if (this.body.GetFixtureList() != null) {
-        this.body.DestroyFixture(this.body.GetFixtureList());
+      if (_entity.body.GetFixtureList() != null) {
+        _entity.body.DestroyFixture(_entity.body.GetFixtureList());
       }
-      this.fixDef.shape = new b2PolygonShape;
-      this.fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
-      this.body.CreateFixture(this.fixDef);
-      return this;
-    },
-    /*
-      #.hit
-      @comp Box2D
-      @sign public Boolean/Array hit(String component)
-      @param component - Component to check collisions for
-      @return `false if no collision. If a collision is detected, return an Array of
-      objects that are colliding, with the type of collision, and the contact points.
-      The contact points has at most two points for polygon and one for circle.
-      ~~~
-      [{
-        obj: [entity],
-        type: "Box2D",
-        points: [Vector[, Vector]]
-      }]
-    */
+      _fixDef.shape = new b2PolygonShape;
+      _fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
+      _entity.body.CreateFixture(_fixDef);
+      return _entity;
+    };
+    return {
+      /*
+        PUBLIC
+      */
 
-    hit: function(component) {
-      var contactEdge, contactPoints, finalresult, manifold, otherEntity, otherId;
-      contactEdge = this.body.GetContactList();
-      if (!(contactEdge != null)) {
-        return false;
-      }
-      otherId = contactEdge.other.GetUserData();
-      otherEntity = Crafty(otherId);
-      if (!otherEntity.has(component)) {
-        return false;
-      }
-      if (!contactEdge.contact.IsTouching()) {
-        return false;
-      }
-      finalresult = [];
-      manifold = new b2WorldManifold();
-      contactEdge.contact.GetWorldManifold(manifold);
-      contactPoints = manifold.m_points;
-      finalresult.push({
-        obj: otherEntity,
-        type: "Box2D",
-        points: contactPoints
-      });
-      return finalresult;
-    },
-    /*
-      #.onHit
-      @comp Box2D
-      @sign public this .onHit(String component, Function beginContact[, Function endContact])
-      @param component - Component to check collisions for
-      @param beginContact - Callback method to execute when collided with component, 
-      @param endContact - Callback method executed once as soon as collision stops
-      Invoke the callback(s) if collision detected through contact listener. We don't bind
-      to EnterFrame, but let the contact listener in the Box2D world notify us.
-    */
+      /*
+        #.body
+        @comp Box2D
+        The `b2Body` from Box2D, created by `Crafty.Box2D.world` during `.attr({x, y})` call.
+        Shape can be attached to it if more params added to `.attr` call, or through
+        `.circle`, `.rectangle`, or `.polygon` method.
+      */
 
-    onHit: function(component, beginContact, endContact) {
-      var _this = this;
-      if (component !== "Box2D") {
+      body: null,
+      init: function() {
+        var SCALE,
+          _this = this;
+        _entity = this;
+        this.addComponent("2D");
+        if (!(Crafty.Box2D.world != null)) {
+          Crafty.Box2D.init();
+        }
+        SCALE = Crafty.Box2D.SCALE;
+        /*
+            Box2D entity is created by calling .attr({x, y, w, h}) or .attr({x, y, r}).
+            That funnction triggers "Change" event for us to set box2d attributes.
+        */
+
+        this.bind("Change", function(attrs) {
+          if (!(attrs != null)) {
+            return;
+          }
+          if ((attrs.x != null) && (attrs.y != null)) {
+            return _createBody(attrs);
+          }
+        });
+        this.bind("Move", function(_arg) {
+          var _h, _w, _x, _y;
+          _x = _arg._x, _y = _arg._y, _w = _arg._w, _h = _arg._h;
+          if (!(_this.body != null)) {
+
+          }
+          /*if _x isnt @x or _y isnt @y
+            #@body.SetAwake(true)
+            @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
+          */
+
+        });
+        /*
+            Update the entity by using Box2D's attributes.
+        */
+
+        this.bind("EnterFrame", function() {
+          var angle, pos;
+          if ((_this.body != null) && _this.body.IsAwake()) {
+            pos = _this.body.GetPosition();
+            angle = Crafty.math.radToDeg(_this.body.GetAngle());
+            if (pos.x * SCALE !== _this.x) {
+              _this.x = pos.x * SCALE;
+            }
+            if (pos.y * SCALE !== _this.y) {
+              _this.y = pos.y * SCALE;
+            }
+            if (angle !== _this.rotation) {
+              return _this.rotation = angle;
+            }
+          }
+        });
+        /*
+            Add this body to a list to be destroyed on the next step.
+            This is to prevent destroying the bodies during collision.
+        */
+
+        return this.bind("Remove", function() {
+          if (_this.body != null) {
+            return Crafty.Box2D.destroy(_this.body);
+          }
+        });
+      },
+      /*
+        #.circle
+        @comp Box2D
+        @sign public this .circle(Number radius)
+        @param radius - The radius of the circle to create
+        Attach a circle shape to entity's existing body.
+        @example 
+        ~~~
+        this.attr({x: 10, y: 10, r:10}) // called internally
+        this.attr({x: 10, y: 10}).circle(10) // called explicitly
+        ~~~
+      */
+
+      circle: _circle,
+      /*
+        #.rectangle
+        @comp Box2D
+        @sign public this .rectangle(Number w, Number h)
+        @param w - The width of the rectangle to create
+        @param h - The height of the rectangle to create
+        Attach a rectangle or square shape to entity's existing body.
+        @example 
+        ~~~
+        this.attr({x: 10, y: 10, w:10, h: 15}) // called internally
+        this.attr({x: 10, y: 10}).rectangle(10, 15) // called explicitly
+        this.attr({x: 10, y: 10}).rectangle(10, 10) // a square
+        this.attr({x: 10, y: 10}).rectangle(10) // also square!!!
+        ~~~
+      */
+
+      rectangle: _rectangle,
+      /*
+        #.hit
+        @comp Box2D
+        @sign public Boolean/Array hit(String component)
+        @param component - Component to check collisions for
+        @return `false if no collision. If a collision is detected, return an Array of
+        objects that are colliding, with the type of collision, and the contact points.
+        The contact points has at most two points for polygon and one for circle.
+        ~~~
+        [{
+          obj: [entity],
+          type: "Box2D",
+          points: [Vector[, Vector]]
+        }]
+      */
+
+      hit: function(component) {
+        var contactEdge, contactPoints, finalresult, manifold, otherEntity, otherId;
+        contactEdge = this.body.GetContactList();
+        if (!(contactEdge != null)) {
+          return false;
+        }
+        otherId = contactEdge.other.GetUserData();
+        otherEntity = Crafty(otherId);
+        if (!otherEntity.has(component)) {
+          return false;
+        }
+        if (!contactEdge.contact.IsTouching()) {
+          return false;
+        }
+        finalresult = [];
+        manifold = new b2WorldManifold();
+        contactEdge.contact.GetWorldManifold(manifold);
+        contactPoints = manifold.m_points;
+        finalresult.push({
+          obj: otherEntity,
+          type: "Box2D",
+          points: contactPoints
+        });
+        return finalresult;
+      },
+      /*
+        #.onHit
+        @comp Box2D
+        @sign public this .onHit(String component, Function beginContact[, Function endContact])
+        @param component - Component to check collisions for
+        @param beginContact - Callback method to execute when collided with component, 
+        @param endContact - Callback method executed once as soon as collision stops
+        Invoke the callback(s) if collision detected through contact listener. We don't bind
+        to EnterFrame, but let the contact listener in the Box2D world notify us.
+      */
+
+      onHit: function(component, beginContact, endContact) {
+        var _this = this;
+        if (component !== "Box2D") {
+          return this;
+        }
+        this.bind("BeginContact", function(data) {
+          var hitData;
+          hitData = [
+            {
+              obj: Crafty(data.targetId),
+              type: "Box2D",
+              points: data.points
+            }
+          ];
+          return beginContact.call(_this, hitData);
+        });
+        if (typeof endContact === "function") {
+          this.bind("EndContact", function() {
+            return endContact.call(_this);
+          });
+        }
         return this;
       }
-      this.bind("BeginContact", function(data) {
-        var hitData;
-        hitData = [
-          {
-            obj: Crafty(data.targetId),
-            type: "Box2D",
-            points: data.points
-          }
-        ];
-        return beginContact.call(_this, hitData);
-      });
-      if (typeof endContact === "function") {
-        this.bind("EndContact", function() {
-          return endContact.call(_this);
-        });
-      }
-      return this;
-    }
-  });
+    };
+  })());
 
 }).call(this);
