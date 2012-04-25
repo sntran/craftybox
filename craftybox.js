@@ -255,9 +255,6 @@
         return this;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (this.body.GetFixtureList() != null) {
-        this.body.DestroyFixture(this.body.GetFixtureList());
-      }
       _fixDef.shape = new b2PolygonShape;
       _fixDef.shape.SetAsOrientedBox(w / 2 / SCALE, h / 2 / SCALE, new b2Vec2(w / 2 / SCALE, h / 2 / SCALE));
       this.body.CreateFixture(_fixDef);
@@ -349,7 +346,28 @@
             return;
           }
           if (_x !== _this.x || _y !== _this.y) {
-            return _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
+            _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
+          }
+          if (_w !== _this.w || _h !== _this.h) {
+            /*
+                    Reseting w and h is to resize, but Box2D does not scale.
+                    When resizing, need to destroy initial shape, then add a new one
+            */
+
+            if (_this.body.GetFixtureList() != null) {
+              _this.body.DestroyFixture(_this.body.GetFixtureList());
+            }
+            if (!(_this.r != null)) {
+              return _rectangle.call(_this, _this.w, _this.h);
+            } else {
+              /*
+                        As a collision body, I choose to make the circle fits inside the AABB.
+                        Thus it must accomodate for the smaller side.
+              */
+
+              _this.r = _this.w < _this.h ? _this.w / 2 : _this.h / 2;
+              return _circle.call(_this, _this.r);
+            }
           }
         });
         /*

@@ -221,9 +221,6 @@ Crafty.c "Box2D", do ->
     return @ if not @body?
 
     SCALE = Crafty.Box2D.SCALE
-    # Remove any old fixture
-    if @body.GetFixtureList()?
-     @body.DestroyFixture @body.GetFixtureList()
 
     _fixDef.shape = new b2PolygonShape
     _fixDef.shape.SetAsOrientedBox w/2/SCALE, h/2/SCALE, new b2Vec2 w/2/SCALE, h/2/SCALE
@@ -282,6 +279,25 @@ Crafty.c "Box2D", do ->
       return if not @body? or (@body.GetType() is b2Body.b2_dynamicBody and @body.IsAwake())
       if _x isnt @x or _y isnt @y
         @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
+
+      if _w isnt @w or _h isnt @h
+        ###
+        Reseting w and h is to resize, but Box2D does not scale.
+        When resizing, need to destroy initial shape, then add a new one
+        ###        
+        @body.DestroyFixture @body.GetFixtureList() if @body.GetFixtureList()? 
+
+        if not @r?          
+          _rectangle.call @, @w, @h
+
+        else
+          ###
+          As a collision body, I choose to make the circle fits inside the AABB.
+          Thus it must accomodate for the smaller side.
+          ###
+          @r = if @w<@h then @w/2 else @h/2
+          _circle.call @, @r
+
 
     ###
     Update the entity by using Box2D's attributes.
