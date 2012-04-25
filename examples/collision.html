@@ -39,7 +39,7 @@ window.onload = function() {
 
 	// Create ball
 	var ent = Crafty.e("Box2D, Draggable")
-				.attr({x:9*30, y:2*30, r:1*30, dynamic: true})
+				.attr({x:9*30, y:2*30, r:1*30, type: "dynamic"})
 	
 	// Set callbacks for .onHit to show on the input boxes
 	ent.onHit("Box2D", function(hitData) {

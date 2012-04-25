@@ -116,13 +116,14 @@
             # with the Box2D component can be created
         */
 
-        init: function(options) {
-          var doSleep, gravityX, gravityY, _ref3, _ref4, _ref5, _ref6,
+        init: function(_arg) {
+          var doSleep, gravityX, gravityY, scale, _ref3,
             _this = this;
-          gravityX = (_ref3 = options != null ? options.gravityX : void 0) != null ? _ref3 : 0;
-          gravityY = (_ref4 = options != null ? options.gravityY : void 0) != null ? _ref4 : 0;
-          _SCALE = (_ref5 = options != null ? options.scale : void 0) != null ? _ref5 : 30;
-          doSleep = (_ref6 = options != null ? options.doSleep : void 0) != null ? _ref6 : true;
+          _ref3 = _arg != null ? _arg : {}, gravityX = _ref3.gravityX, gravityY = _ref3.gravityY, scale = _ref3.scale, doSleep = _ref3.doSleep;
+          gravityX = gravityX != null ? gravityX : 0;
+          gravityY = gravityY != null ? gravityY : 0;
+          _SCALE = scale != null ? scale : 30;
+          doSleep = doSleep != null ? doSleep : true;
           _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep);
           this.__defineGetter__('world', function() {
             return _world;
@@ -152,6 +153,7 @@
               body = _toBeRemoved[_i];
               _world.DestroyBody(body);
             }
+            _toBeRemoved = [];
             if (_this.debug) {
               _world.DrawDebugData();
             }
@@ -176,7 +178,7 @@
             body = _world.GetBodyList();
             _results = [];
             while (body != null) {
-              _world.DestroyBody(body);
+              _toBeRemoved.push(body);
               _results.push(body = body.GetNext());
             }
             return _results;
@@ -203,60 +205,100 @@
       PRIVATE
     */
 
-    var _body, _circle, _createBody, _entity, _fixDef, _rectangle;
-    _entity = null;
-    _body = null;
+    var _circle, _createBody, _fixDef, _polygon, _rectangle;
     _fixDef = null;
-    _createBody = function(attrs) {
-      var SCALE, bodyDef, h, w, _ref3, _ref4, _ref5, _ref6, _ref7;
+    _createBody = function(_arg) {
+      var SCALE, bodyDef, density, friction, h, poly, r, restitution, type, w, x, y;
+      x = _arg.x, y = _arg.y, w = _arg.w, h = _arg.h, r = _arg.r, poly = _arg.poly, type = _arg.type, density = _arg.density, friction = _arg.friction, restitution = _arg.restitution;
       SCALE = Crafty.Box2D.SCALE;
       bodyDef = new b2BodyDef;
-      bodyDef.type = (attrs.dynamic != null) && attrs.dynamic ? b2Body.b2_dynamicBody : b2Body.b2_staticBody;
-      bodyDef.position.Set(attrs.x / SCALE, attrs.y / SCALE);
-      _entity.body = Crafty.Box2D.world.CreateBody(bodyDef);
-      _entity.body.SetAwake(attrs.dynamic != null);
-      _entity.body.SetUserData(_entity[0]);
+      if ((type != null) && (type === "static" || type === "dynamic" || type === "kinematic")) {
+        bodyDef.type = b2Body["b2_" + type + "Body"];
+      }
+      bodyDef.position.Set(x / SCALE, y / SCALE);
+      this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+      this.body.SetUserData(this[0]);
       _fixDef = _fixDef != null ? _fixDef : new b2FixtureDef;
-      _fixDef.density = (_ref3 = attrs.density) != null ? _ref3 : 1.0;
-      _fixDef.friction = (_ref4 = attrs.friction) != null ? _ref4 : 0.5;
-      _fixDef.restitution = (_ref5 = attrs.restitution) != null ? _ref5 : 0.2;
-      if (attrs.r != null) {
-        return _circle(attrs.r);
-      } else if ((attrs.w != null) || (attrs.h != null)) {
-        w = (_entity.w = (_ref6 = attrs.w) != null ? _ref6 : attrs.h) / SCALE;
-        h = (_entity.h = (_ref7 = attrs.h) != null ? _ref7 : attrs.w) / SCALE;
-        return _rectangle(w, h);
+      _fixDef.density = density != null ? density : 1.0;
+      _fixDef.friction = friction != null ? friction : 0.5;
+      _fixDef.restitution = restitution != null ? restitution : 0.2;
+      if (r != null) {
+        return _circle.call(this, r);
+      } else if ((w != null) || (h != null)) {
+        w = w != null ? w : h;
+        h = h != null ? h : w;
+        return _rectangle.call(this, w, h);
+      } else if (poly != null) {
+        return _polygon.call(this, poly);
       }
     };
     _circle = function(radius) {
       var SCALE;
-      if (!(_entity.body != null)) {
-        return _entity;
+      if (!(this.body != null)) {
+        return this;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (_entity.body.GetFixtureList() != null) {
-        _entity.body.DestroyFixture(_entity.body.GetFixtureList());
+      if (this.body.GetFixtureList() != null) {
+        this.body.DestroyFixture(this.body.GetFixtureList());
       }
-      _entity._w = _entity._h = radius * 2;
+      this._w = this._h = radius * 2;
       _fixDef.shape = new b2CircleShape(radius / SCALE);
-      _fixDef.shape.SetLocalPosition(new b2Vec2(_entity.w / SCALE / 2, _entity.h / SCALE / 2));
-      _entity.body.CreateFixture(_fixDef);
-      return _entity;
+      _fixDef.shape.SetLocalPosition(new b2Vec2(this.w / SCALE / 2, this.h / SCALE / 2));
+      this.body.CreateFixture(_fixDef);
+      return this;
     };
     _rectangle = function(w, h) {
       var SCALE;
-      if (!(_entity.body != null)) {
-        return _entity;
+      this.w = w;
+      this.h = h;
+      if (!(this.body != null)) {
+        return this;
       }
-      h = h != null ? h : w;
       SCALE = Crafty.Box2D.SCALE;
-      if (_entity.body.GetFixtureList() != null) {
-        _entity.body.DestroyFixture(_entity.body.GetFixtureList());
+      if (this.body.GetFixtureList() != null) {
+        this.body.DestroyFixture(this.body.GetFixtureList());
       }
       _fixDef.shape = new b2PolygonShape;
-      _fixDef.shape.SetAsOrientedBox(w / 2, h / 2, new b2Vec2(w / 2, h / 2));
-      _entity.body.CreateFixture(_fixDef);
-      return _entity;
+      _fixDef.shape.SetAsOrientedBox(w / 2 / SCALE, h / 2 / SCALE, new b2Vec2(w / 2 / SCALE, h / 2 / SCALE));
+      this.body.CreateFixture(_fixDef);
+      return this;
+    };
+    /*
+      polygon([[50,0],[100,100],[0,100]])
+      polygon([50,0],[100,100],[0,100])
+    */
+
+    _polygon = function(vertices) {
+      var SCALE, convert, poly, vertex;
+      if (arguments.length > 1) {
+        vertices = Array.prototype.slice.call(arguments, 0);
+      }
+      SCALE = Crafty.Box2D.SCALE;
+      _fixDef.shape = new b2PolygonShape;
+      convert = function(pointAsArray) {
+        var vec;
+        return vec = new b2Vec2(pointAsArray[0] / SCALE, pointAsArray[1] / SCALE);
+      };
+      poly = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = vertices.length; _i < _len; _i++) {
+          vertex = vertices[_i];
+          _results.push(convert(vertex));
+        }
+        return _results;
+      })();
+      _fixDef.shape.SetAsArray((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = vertices.length; _i < _len; _i++) {
+          vertex = vertices[_i];
+          _results.push(convert(vertex));
+        }
+        return _results;
+      })(), vertices.length);
+      this.body.CreateFixture(_fixDef);
+      return this;
     };
     return {
       /*
@@ -275,7 +317,6 @@
       init: function() {
         var SCALE,
           _this = this;
-        _entity = this;
         this.addComponent("2D");
         if (!(Crafty.Box2D.world != null)) {
           Crafty.Box2D.init();
@@ -291,20 +332,25 @@
             return;
           }
           if ((attrs.x != null) && (attrs.y != null)) {
-            return _createBody(attrs);
+            return _createBody.call(_this, attrs);
           }
         });
+        /*
+            This event is triggered when x,y,w or h changes, when physics body moves, or when entity
+            is moved manually. To avoid conflict, we only allow manual movement when body is sleeping.
+            Other components dealing with manual movement through inputs such as keyboard and mouse
+            need to make it sleep before handling, then awake it when done.
+        */
+
         this.bind("Move", function(_arg) {
           var _h, _w, _x, _y;
           _x = _arg._x, _y = _arg._y, _w = _arg._w, _h = _arg._h;
-          if (!(_this.body != null)) {
-
+          if (!(_this.body != null) || (_this.body.GetType() === b2Body.b2_dynamicBody && _this.body.IsAwake())) {
+            return;
           }
-          /*if _x isnt @x or _y isnt @y
-            #@body.SetAwake(true)
-            @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
-          */
-
+          if (_x !== _this.x || _y !== _this.y) {
+            return _this.body.SetPosition(new b2Vec2(_this.x / SCALE, _this.y / SCALE));
+          }
         });
         /*
             Update the entity by using Box2D's attributes.
@@ -350,7 +396,9 @@
         ~~~
       */
 
-      circle: _circle,
+      circle: function(radius) {
+        return _circle.call(this, radius);
+      },
       /*
         #.rectangle
         @comp Box2D
@@ -367,7 +415,27 @@
         ~~~
       */
 
-      rectangle: _rectangle,
+      rectangle: function(w, h) {
+        return _rectangle.call(this, w, h);
+      },
+      /*
+        #.polygon
+        @comp Box2D
+        @sign public this .polygon(Array vertices)
+        @sign public this .polygon(Array point, Array point[, Array point...])
+        @param vertices - vertices array as an argument where index 0 is the x position
+        and index 1 is the y position. Can also simply put each point as an argument.
+        Attach a polygon to entity's existing body. When creating a polygon for an entity,
+        each point should be offset or relative from the entities `x` and `y`
+        @example
+        ~~~
+        this.attr({x: 10, y: 10}).polygon([[50,0],[100,100],[0,100]])
+        this.attr({x: 10, y: 10}).polygon([50,0],[100,100],[0,100])
+      */
+
+      polygon: function(vertices) {
+        return _polygon.call(this, vertices);
+      },
       /*
         #.hit
         @comp Box2D

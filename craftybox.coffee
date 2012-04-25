@@ -108,11 +108,11 @@ Crafty.extend
     # Create a Box2D world. Must be called before any entities
     # with the Box2D component can be created
     ###
-    init: (options) ->
-      gravityX = options?.gravityX ? 0
-      gravityY = options?.gravityY ? 0
-      _SCALE = options?.scale ? 30
-      doSleep = options?.doSleep ? true
+    init: ({gravityX, gravityY, scale, doSleep} = {}) ->
+      gravityX = gravityX ? 0
+      gravityY = gravityY ? 0
+      _SCALE = scale ? 30
+      doSleep = doSleep ? true
 
       _world = new b2World(new b2Vec2(gravityX, gravityY), doSleep)
 
@@ -134,6 +134,7 @@ Crafty.extend
       Crafty.bind "EnterFrame", =>
         _world.Step 1/Crafty.timer.getFPS(), 10, 10
         _world.DestroyBody body for body in _toBeRemoved
+        _toBeRemoved = []
         _world.DrawDebugData() if @debug
         _world.ClearForces()
 
@@ -153,7 +154,7 @@ Crafty.extend
       else
         body = _world.GetBodyList()
         while body?
-          _world.DestroyBody body
+          _toBeRemoved.push body
           body = body.GetNext()
 
 ###
@@ -171,64 +172,77 @@ Crafty.c "Box2D", do ->
   PRIVATE
   ###
 
-  _entity = null
-  _body = null
   _fixDef = null
 
-  _createBody = (attrs) ->
+  _createBody = ({x, y, w, h, r, poly, type, density, friction, restitution}) ->
     SCALE = Crafty.Box2D.SCALE
     # Creating a new body requires both x and y, and  ( (w and h) or r)
     bodyDef = new b2BodyDef
-    bodyDef.type = if attrs.dynamic? and attrs.dynamic then b2Body.b2_dynamicBody else b2Body.b2_staticBody
-    # The body position is the place where it will draw
-    bodyDef.position.Set attrs.x/SCALE, attrs.y/SCALE
-    _entity.body = Crafty.Box2D.world.CreateBody bodyDef
-    _entity.body.SetAwake(attrs.dynamic?)
+    bodyDef.type = b2Body["b2_#{type}Body"] if type? and type in ["static", "dynamic", "kinematic"]
+    bodyDef.position.Set x/SCALE, y/SCALE
+    @body = Crafty.Box2D.world.CreateBody bodyDef
 
     # Set entity's id to body's user data
     # Needed for collision detection
-    _entity.body.SetUserData _entity[0]
+    @body.SetUserData @[0]
 
     _fixDef = _fixDef ? new b2FixtureDef          
-    _fixDef.density = attrs.density ? 1.0 # how heavy it is in relation to its area
-    _fixDef.friction = attrs.friction ? 0.5 # how slippery it is
-    _fixDef.restitution = attrs.restitution ? 0.2 # how bouncy the fixture is
+    _fixDef.density = density ? 1.0 # how heavy it is in relation to its area
+    _fixDef.friction = friction ? 0.5 # how slippery it is
+    _fixDef.restitution = restitution ? 0.2 # how bouncy the fixture is
 
-    if attrs.r?
-      _circle attrs.r
+    if r?
+      _circle.call @, r
 
-    else if attrs.w? or attrs.h?
+    else if w? or h?    
       # Need to set same @w or same @h if only one param is provided
-      w = (_entity.w = attrs.w ? attrs.h) / SCALE
-      h = (_entity.h = attrs.h ? attrs.w) / SCALE
-      _rectangle w, h
+      w = w ? h
+      h = h ? w
+      _rectangle.call @, w, h      
+
+    else if poly?
+      _polygon.call @, poly
 
   _circle = (radius) ->
-    return _entity if not _entity.body?
+    return @ if not @body?
     SCALE = Crafty.Box2D.SCALE
     # Remove any old fixture
-    if _entity.body.GetFixtureList()?
-      _entity.body.DestroyFixture _entity.body.GetFixtureList()
+    if @body.GetFixtureList()?
+      @body.DestroyFixture @body.GetFixtureList()
 
     # Not use setters to avoid Change event
-    _entity._w = _entity._h = radius*2
+    @_w = @_h = radius*2
     _fixDef.shape = new b2CircleShape radius/SCALE
-    _fixDef.shape.SetLocalPosition new b2Vec2 _entity.w/SCALE/2, _entity.h/SCALE/2
-    _entity.body.CreateFixture _fixDef
-    _entity
+    _fixDef.shape.SetLocalPosition new b2Vec2 @w/SCALE/2, @h/SCALE/2
+    @body.CreateFixture _fixDef
+    @
 
-  _rectangle = (w, h) ->
-    return _entity if not _entity.body?
-    h = h ? w
+  _rectangle = (@w, @h) ->
+    return @ if not @body?
+
     SCALE = Crafty.Box2D.SCALE
     # Remove any old fixture
-    if _entity.body.GetFixtureList()?
-      _entity.body.DestroyFixture _entity.body.GetFixtureList()
+    if @body.GetFixtureList()?
+     @body.DestroyFixture @body.GetFixtureList()
 
     _fixDef.shape = new b2PolygonShape
-    _fixDef.shape.SetAsOrientedBox w/2, h/2, new b2Vec2 w/2, h/2
-    _entity.body.CreateFixture _fixDef
-    _entity
+    _fixDef.shape.SetAsOrientedBox w/2/SCALE, h/2/SCALE, new b2Vec2 w/2/SCALE, h/2/SCALE
+    @body.CreateFixture _fixDef
+    @
+
+  ###
+  polygon([[50,0],[100,100],[0,100]])
+  polygon([50,0],[100,100],[0,100])
+  ###
+  _polygon = (vertices) ->
+    vertices = Array::slice.call(arguments, 0) if arguments.length > 1
+    SCALE = Crafty.Box2D.SCALE
+    _fixDef.shape = new b2PolygonShape
+    convert = (pointAsArray) -> vec = new b2Vec2(pointAsArray[0]/SCALE, pointAsArray[1]/SCALE)
+    poly = (convert vertex for vertex in vertices)
+    _fixDef.shape.SetAsArray (convert vertex for vertex in vertices), vertices.length
+    @body.CreateFixture _fixDef
+    @
 
 
   ###
@@ -245,7 +259,6 @@ Crafty.c "Box2D", do ->
   body: null
 
   init: ->
-    _entity = @
     @addComponent "2D"
     Crafty.Box2D.init() if not Crafty.Box2D.world?
     SCALE = Crafty.Box2D.SCALE
@@ -257,13 +270,18 @@ Crafty.c "Box2D", do ->
     @bind "Change", (attrs) =>
       return if not attrs?
       if attrs.x? and attrs.y?
-        _createBody(attrs)
+        _createBody.call @, attrs
 
+    ###
+    This event is triggered when x,y,w or h changes, when physics body moves, or when entity
+    is moved manually. To avoid conflict, we only allow manual movement when body is sleeping.
+    Other components dealing with manual movement through inputs such as keyboard and mouse
+    need to make it sleep before handling, then awake it when done.
+    ###
     @bind "Move", ({_x, _y, _w, _h}) =>
-      return if not @body?
-      ###if _x isnt @x or _y isnt @y
-        #@body.SetAwake(true)
-        @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))###
+      return if not @body? or (@body.GetType() is b2Body.b2_dynamicBody and @body.IsAwake())
+      if _x isnt @x or _y isnt @y
+        @body.SetPosition(new b2Vec2(@x/SCALE, @y/SCALE))
 
     ###
     Update the entity by using Box2D's attributes.
@@ -271,7 +289,7 @@ Crafty.c "Box2D", do ->
     @bind "EnterFrame", =>
       if @body? and @body.IsAwake()
         pos = @body.GetPosition()
-        angle = Crafty.math.radToDeg(@body.GetAngle())
+        angle = Crafty.math.radToDeg @body.GetAngle()
 
         @x = pos.x*SCALE if pos.x*SCALE isnt @x
         @y = pos.y*SCALE if pos.y*SCALE isnt @y
@@ -296,7 +314,7 @@ Crafty.c "Box2D", do ->
   this.attr({x: 10, y: 10}).circle(10) // called explicitly
   ~~~
   ###
-  circle: _circle
+  circle: (radius) -> _circle.call @, radius
 
   ###
   #.rectangle
@@ -313,7 +331,23 @@ Crafty.c "Box2D", do ->
   this.attr({x: 10, y: 10}).rectangle(10) // also square!!!
   ~~~
   ###
-  rectangle: _rectangle
+  rectangle: (w, h) -> _rectangle.call @, w, h
+
+  ###
+  #.polygon
+  @comp Box2D
+  @sign public this .polygon(Array vertices)
+  @sign public this .polygon(Array point, Array point[, Array point...])
+  @param vertices - vertices array as an argument where index 0 is the x position
+  and index 1 is the y position. Can also simply put each point as an argument.
+  Attach a polygon to entity's existing body. When creating a polygon for an entity,
+  each point should be offset or relative from the entities `x` and `y`
+  @example
+  ~~~
+  this.attr({x: 10, y: 10}).polygon([[50,0],[100,100],[0,100]])
+  this.attr({x: 10, y: 10}).polygon([50,0],[100,100],[0,100])
+  ###
+  polygon: (vertices) -> _polygon.call @, vertices
 
   ###
   #.hit
@@ -366,12 +400,9 @@ Crafty.c "Box2D", do ->
   onHit: (component, beginContact, endContact) ->
     return @ if component isnt "Box2D"
 
-    # You can't add/destroy bodies and fixtures in BeginContact because this is happening during
-    # the time step. Inside BeginContact you will have to make a note of which bodies should
-    # be destroyed, and do the actual destroying after the time step has completed.
     @bind "BeginContact", (data) =>
       hitData = [{obj: Crafty(data.targetId), type: "Box2D", points: data.points}]
-      beginContact.call(@, hitData)
+      beginContact.call @, hitData
 
     if typeof endContact is "function"
       # This is only triggered once per contact, so just execute endContact callback.
