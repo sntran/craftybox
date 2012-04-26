@@ -206,10 +206,10 @@ Crafty.c "Box2D", do ->
       _polygon.call @, poly
 
   _circle = (radius) ->
-    return if not @x or not @y
+    return if not @x? or not @y?
     SCALE = Crafty.Box2D.SCALE
 
-    if not @body
+    if not @body?
       bodyDef = new b2BodyDef
       bodyDef.position.Set x/SCALE, y/SCALE
       @body = Crafty.Box2D.world.CreateBody bodyDef 
@@ -222,10 +222,10 @@ Crafty.c "Box2D", do ->
     @
 
   _rectangle = (@w, @h) ->
-    return if not @x or not @y
+    return @ if not @x? or not @y?
     SCALE = Crafty.Box2D.SCALE
 
-    if not @body
+    if not @body?
       bodyDef = new b2BodyDef
       bodyDef.position.Set x/SCALE, y/SCALE
       @body = Crafty.Box2D.world.CreateBody bodyDef    
@@ -240,10 +240,10 @@ Crafty.c "Box2D", do ->
   polygon([50,0],[100,100],[0,100])
   ###
   _polygon = (vertices) ->
-    return if not @x or not @y
+    return if not @x? or not @y?
     SCALE = Crafty.Box2D.SCALE
 
-    if not @body
+    if not @body?
       bodyDef = new b2BodyDef
       bodyDef.position.Set x/SCALE, y/SCALE
       @body = Crafty.Box2D.world.CreateBody bodyDef
