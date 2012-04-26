@@ -44,6 +44,8 @@ describe "CraftyBox Component", ->
       ent.body.GetPosition().x.should.equal attrs.x/SCALE
       ent.body.GetPosition().y.should.equal attrs.y/SCALE
 
+    it "should not create a new body when .attr is called again with x and y", ->
+
     it "should change position when changing x or y", ->
       attrs = {x: 30, y: 30}
       ent.attr attrs
@@ -329,5 +331,14 @@ describe "CraftyBox Component", ->
       should.not.exist ent.body
       ent.rectangle(10, 15)
       should.not.exist ent.body
+
+  describe "Collision", ->
+    it "should store entity's id to body's user data", ->
+      ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
+      ent.body.GetUserData().should.equal ent[0]
+
+    describe ".onHit(compopent, beginContact, endContact)", ->
+      it "should only check with other Box2D entity", ->
+        ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
 
 
