@@ -36,10 +36,10 @@ window.onload = function() {
 	Crafty.Box2D.debug = true;
 
 	window.follower = Crafty.e("Box2D")
-						.attr({x:1*30, y:1*30, w: 2*2*30, h:1*2*30, dynamic: true});
+						.attr({x:1*30, y:1*30, w: 2*2*30, h:1*2*30, type: "dynamic"});
 
 	window.followee = Crafty.e("Box2D, Draggable")
-						.attr({x:6*30, y:5*30, r: 2*30, dynamic: true})
+						.attr({x:6*30, y:5*30, r: 2*30, type: "dynamic"})
 	
 	$("#attach").click(function() {
 		followee.attach(follower);

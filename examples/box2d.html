@@ -23,9 +23,9 @@ window.onload = function() {
 	var STATIC = "#A5EDA5";
 
 	Crafty.init(800, 600);
-	//Crafty.Box2D.debug = true;
+	Crafty.Box2D.debug = true;
 	// Create ground
-	Crafty.e("Box2D, Canvas, Color")
+	Crafty.e("Box2D, Canvas, Color, Draggable")
 				.attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30})
 				.color(STATIC);
 			
@@ -40,7 +40,7 @@ window.onload = function() {
 				var hW = (Math.random() + 0.1)*30;
 				var hH = (Math.random() + 0.1)*30;
 				var ent = Crafty.e(components)
-							.attr({x:x, y:y, w: hW*2, h: hH*2, dynamic: true});
+							.attr({x:x, y:y, w: hW*2, h: hH*2, type: "dynamic"});
 
 				// Simulate Box2D's debugDraw
 				ent.ready = true;
@@ -50,9 +50,9 @@ window.onload = function() {
 				})
 
 			} else {
-				/*var r = (Math.random() + 0.1)*30;
+				var r = (Math.random() + 0.1)*30;
 				var ent = Crafty.e(components)
-							.attr({x:x, y:y, r:r, dynamic: true});
+							.attr({x:x, y:y, r:r, type: "dynamic"});
 
 				// Simulate Box2D's debugDraw
 				ent.ready = true;	
@@ -64,7 +64,7 @@ window.onload = function() {
 					obj.ctx.arc(centerX, centerY, obj.pos._w/2, 0, Math.PI*2, true);
 					obj.ctx.closePath();
 					obj.ctx.fill();
-				});*/
+				});
 			}
 		})();
 	}

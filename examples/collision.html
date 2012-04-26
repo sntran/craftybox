@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - Mouse</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+</head>
+<body>
+<p>Collision! In this silly example, once the ball touches the ground, gravity will change direction, making it moving all the time. Used .onHit with the same signature as of "Collision" component. The first box tells which wall it hits, and the second tell the contact points.
+Since a circle is involved in the collision, there is only one pair of contact points.</p>
+
+<input id="target" DISABLED>
+<input id="contact-points" DISABLED>
+<input id="hit" DISABLED>
+<input id="hit-contact-points" DISABLED>
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+	Crafty.Box2D.debug = true;
+	
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:0*30, w: 20*30, h: 1*30, name: "roof"}); // roof
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:15*30, w: 20*30, h: 1*30, name: "floor"}); // ground
+	Crafty.e("Box2D")
+				.attr({x:0*30, y:1*30, w: 1*30, h: 14*30, name: "left"}); // left
+	Crafty.e("Box2D")
+				.attr({x:19*30, y:1*30, w: 1*30, h: 14*30, name: "right"}); // right
+
+	var gravityY = 10
+
+	// Create ball
+	var ent = Crafty.e("Box2D, Draggable")
+				.attr({x:9*30, y:2*30, r:1*30, type: "dynamic"})
+	
+	// Set callbacks for .onHit to show on the input boxes
+	ent.onHit("Box2D", function(hitData) {
+					var data = hitData[0]
+					$("#target").val(data.obj.name);
+					$("#contact-points").val("x="+data.points[0].x+", y="+data.points[0].y);
+					gravityY *= -1
+					Crafty.Box2D.gravity = {x: 0, y: gravityY};
+				}, function() {
+				})
+
+	// Use .hit to check they return the same value
+	ent.bind("EnterFrame", function() {
+		var hitData = ent.hit("Box2D");
+		if (hitData) {
+			var data = hitData[0];
+			$("#hit").val(data.obj.name);
+			$("#hit-contact-points").val("x="+data.points[0].x+", y="+data.points[0].y);
+		}
+	})
+
+	// Raise the gravity
+	Crafty.Box2D.gravity = {x: 0, y: gravityY};
+}
+</script>
+</body>
+</html>
