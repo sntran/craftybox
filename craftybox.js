@@ -239,11 +239,11 @@
     };
     _circle = function(radius) {
       var SCALE, bodyDef;
-      if (!this.x || !this.y) {
+      if (!(this.x != null) || !(this.y != null)) {
         return;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (!this.body) {
+      if (!(this.body != null)) {
         bodyDef = new b2BodyDef;
         bodyDef.position.Set(x / SCALE, y / SCALE);
         this.body = Crafty.Box2D.world.CreateBody(bodyDef);
@@ -258,11 +258,11 @@
       var SCALE, bodyDef;
       this.w = w;
       this.h = h;
-      if (!this.x || !this.y) {
-        return;
+      if (!(this.x != null) || !(this.y != null)) {
+        return this;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (!this.body) {
+      if (!(this.body != null)) {
         bodyDef = new b2BodyDef;
         bodyDef.position.Set(x / SCALE, y / SCALE);
         this.body = Crafty.Box2D.world.CreateBody(bodyDef);
@@ -279,11 +279,11 @@
 
     _polygon = function(vertices) {
       var SCALE, bodyDef, convert, poly, vertex;
-      if (!this.x || !this.y) {
+      if (!(this.x != null) || !(this.y != null)) {
         return;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (!this.body) {
+      if (!(this.body != null)) {
         bodyDef = new b2BodyDef;
         bodyDef.position.Set(x / SCALE, y / SCALE);
         this.body = Crafty.Box2D.world.CreateBody(bodyDef);
