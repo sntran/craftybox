@@ -217,6 +217,11 @@
       }
       bodyDef.position.Set(x / SCALE, y / SCALE);
       this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+      /*
+          Set entity's id to body's user data.
+          Needed for collision detection
+      */
+
       this.body.SetUserData(this[0]);
       _fixDef = _fixDef != null ? _fixDef : new b2FixtureDef;
       _fixDef.density = density != null ? density : 1.0;
@@ -233,13 +238,15 @@
       }
     };
     _circle = function(radius) {
-      var SCALE;
-      if (!(this.body != null)) {
-        return this;
+      var SCALE, bodyDef;
+      if (!this.x || !this.y) {
+        return;
       }
       SCALE = Crafty.Box2D.SCALE;
-      if (this.body.GetFixtureList() != null) {
-        this.body.DestroyFixture(this.body.GetFixtureList());
+      if (!this.body) {
+        bodyDef = new b2BodyDef;
+        bodyDef.position.Set(x / SCALE, y / SCALE);
+        this.body = Crafty.Box2D.world.CreateBody(bodyDef);
       }
       this._w = this._h = radius * 2;
       _fixDef.shape = new b2CircleShape(radius / SCALE);
@@ -248,13 +255,18 @@
       return this;
     };
     _rectangle = function(w, h) {
-      var SCALE;
+      var SCALE, bodyDef;
       this.w = w;
       this.h = h;
-      if (!(this.body != null)) {
-        return this;
+      if (!this.x || !this.y) {
+        return;
       }
       SCALE = Crafty.Box2D.SCALE;
+      if (!this.body) {
+        bodyDef = new b2BodyDef;
+        bodyDef.position.Set(x / SCALE, y / SCALE);
+        this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+      }
       _fixDef.shape = new b2PolygonShape;
       _fixDef.shape.SetAsOrientedBox(w / 2 / SCALE, h / 2 / SCALE, new b2Vec2(w / 2 / SCALE, h / 2 / SCALE));
       this.body.CreateFixture(_fixDef);
@@ -266,7 +278,16 @@
     */
 
     _polygon = function(vertices) {
-      var SCALE, convert, poly, vertex;
+      var SCALE, bodyDef, convert, poly, vertex;
+      if (!this.x || !this.y) {
+        return;
+      }
+      SCALE = Crafty.Box2D.SCALE;
+      if (!this.body) {
+        bodyDef = new b2BodyDef;
+        bodyDef.position.Set(x / SCALE, y / SCALE);
+        this.body = Crafty.Box2D.world.CreateBody(bodyDef);
+      }
       if (arguments.length > 1) {
         vertices = Array.prototype.slice.call(arguments, 0);
       }
@@ -308,6 +329,7 @@
         The `b2Body` from Box2D, created by `Crafty.Box2D.world` during `.attr({x, y})` call.
         Shape can be attached to it if more params added to `.attr` call, or through
         `.circle`, `.rectangle`, or `.polygon` method.
+        Those helpers also create a body if @x and @y available and no body was created.
       */
 
       body: null,

@@ -182,8 +182,10 @@ Crafty.c "Box2D", do ->
     bodyDef.position.Set x/SCALE, y/SCALE
     @body = Crafty.Box2D.world.CreateBody bodyDef
 
-    # Set entity's id to body's user data
-    # Needed for collision detection
+    ###
+    Set entity's id to body's user data.
+    Needed for collision detection
+    ###
     @body.SetUserData @[0]
 
     _fixDef = _fixDef ? new b2FixtureDef          
@@ -204,11 +206,13 @@ Crafty.c "Box2D", do ->
       _polygon.call @, poly
 
   _circle = (radius) ->
-    return @ if not @body?
+    return if not @x or not @y
     SCALE = Crafty.Box2D.SCALE
-    # Remove any old fixture
-    if @body.GetFixtureList()?
-      @body.DestroyFixture @body.GetFixtureList()
+
+    if not @body
+      bodyDef = new b2BodyDef
+      bodyDef.position.Set x/SCALE, y/SCALE
+      @body = Crafty.Box2D.world.CreateBody bodyDef 
 
     # Not use setters to avoid Change event
     @_w = @_h = radius*2
@@ -218,9 +222,13 @@ Crafty.c "Box2D", do ->
     @
 
   _rectangle = (@w, @h) ->
-    return @ if not @body?
-
+    return if not @x or not @y
     SCALE = Crafty.Box2D.SCALE
+
+    if not @body
+      bodyDef = new b2BodyDef
+      bodyDef.position.Set x/SCALE, y/SCALE
+      @body = Crafty.Box2D.world.CreateBody bodyDef    
 
     _fixDef.shape = new b2PolygonShape
     _fixDef.shape.SetAsOrientedBox w/2/SCALE, h/2/SCALE, new b2Vec2 w/2/SCALE, h/2/SCALE
@@ -232,6 +240,14 @@ Crafty.c "Box2D", do ->
   polygon([50,0],[100,100],[0,100])
   ###
   _polygon = (vertices) ->
+    return if not @x or not @y
+    SCALE = Crafty.Box2D.SCALE
+
+    if not @body
+      bodyDef = new b2BodyDef
+      bodyDef.position.Set x/SCALE, y/SCALE
+      @body = Crafty.Box2D.world.CreateBody bodyDef
+
     vertices = Array::slice.call(arguments, 0) if arguments.length > 1
     SCALE = Crafty.Box2D.SCALE
     _fixDef.shape = new b2PolygonShape
@@ -252,6 +268,7 @@ Crafty.c "Box2D", do ->
   The `b2Body` from Box2D, created by `Crafty.Box2D.world` during `.attr({x, y})` call.
   Shape can be attached to it if more params added to `.attr` call, or through
   `.circle`, `.rectangle`, or `.polygon` method.
+  Those helpers also create a body if @x and @y available and no body was created.
   ###
   body: null
 

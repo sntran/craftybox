@@ -63,6 +63,7 @@ See `examples` folder for more usuages.
 * Manual collision detection with `.hit(component)`.
 * Refactored to use module pattern.
 * Changing gravity should wake up all bodies.
+* Polygon supported.
 
 ### v0.0.3
 
