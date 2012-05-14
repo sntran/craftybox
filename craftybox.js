@@ -51,27 +51,27 @@
         var contactListener;
         contactListener = new b2ContactListener;
         contactListener.BeginContact = function(contact) {
-          var contactPoints, entityIdA, entityIdB, manifold;
-          entityIdA = contact.GetFixtureA().GetBody().GetUserData();
-          entityIdB = contact.GetFixtureB().GetBody().GetUserData();
+          var contactPoints, entityA, entityB, manifold;
+          entityA = contact.GetFixtureA().GetBody().GetUserData();
+          entityB = contact.GetFixtureB().GetBody().GetUserData();
           manifold = new b2WorldManifold();
           contact.GetWorldManifold(manifold);
           contactPoints = manifold.m_points;
-          Crafty(entityIdA).trigger("BeginContact", {
+          entityA.trigger("BeginContact", {
             points: contactPoints,
-            targetId: entityIdB
+            target: entityB
           });
-          return Crafty(entityIdB).trigger("BeginContact", {
+          return entityB.trigger("BeginContact", {
             points: contactPoints,
-            targetId: entityIdA
+            target: entityA
           });
         };
         contactListener.EndContact = function(contact) {
-          var entityIdA, entityIdB;
-          entityIdA = contact.GetFixtureA().GetBody().GetUserData();
-          entityIdB = contact.GetFixtureB().GetBody().GetUserData();
-          Crafty(entityIdA).trigger("EndContact");
-          return Crafty(entityIdB).trigger("EndContact");
+          var entityA, entityB;
+          entityA = contact.GetFixtureA().GetBody().GetUserData();
+          entityB = contact.GetFixtureB().GetBody().GetUserData();
+          entityA.trigger("EndContact", entityB);
+          return entityB.trigger("EndContact", entityA);
         };
         return _world.SetContactListener(contactListener);
       };
@@ -208,8 +208,8 @@
     var _circle, _createBody, _fixDef, _polygon, _rectangle;
     _fixDef = null;
     _createBody = function(_arg) {
-      var SCALE, bodyDef, density, friction, h, poly, r, restitution, type, w, x, y;
-      x = _arg.x, y = _arg.y, w = _arg.w, h = _arg.h, r = _arg.r, poly = _arg.poly, type = _arg.type, density = _arg.density, friction = _arg.friction, restitution = _arg.restitution;
+      var SCALE, bodyDef, density, filter, friction, h, isSensor, poly, r, restitution, type, w, x, y, _ref3, _ref4, _ref5;
+      x = _arg.x, y = _arg.y, w = _arg.w, h = _arg.h, r = _arg.r, poly = _arg.poly, type = _arg.type, density = _arg.density, friction = _arg.friction, restitution = _arg.restitution, isSensor = _arg.isSensor, filter = _arg.filter;
       SCALE = Crafty.Box2D.SCALE;
       bodyDef = new b2BodyDef;
       if ((type != null) && (type === "static" || type === "dynamic" || type === "kinematic")) {
@@ -222,11 +222,15 @@
           Needed for collision detection
       */
 
-      this.body.SetUserData(this[0]);
+      this.body.SetUserData(this);
       _fixDef = _fixDef != null ? _fixDef : new b2FixtureDef;
       _fixDef.density = density != null ? density : 1.0;
       _fixDef.friction = friction != null ? friction : 0.5;
       _fixDef.restitution = restitution != null ? restitution : 0.2;
+      _fixDef.isSensor = isSensor != null ? isSensor : false;
+      _fixDef.filter.categoryBits = (_ref3 = filter != null ? filter.categoryBits : void 0) != null ? _ref3 : 0x0001;
+      _fixDef.filter.groupIndex = (_ref4 = filter != null ? filter.groupIndex : void 0) != null ? _ref4 : 0;
+      _fixDef.filter.maskBits = (_ref5 = filter != null ? filter.maskBits : void 0) != null ? _ref5 : 0xFFFF;
       if (r != null) {
         return _circle.call(this, r);
       } else if ((w != null) || (h != null)) {
@@ -245,7 +249,7 @@
       SCALE = Crafty.Box2D.SCALE;
       if (!(this.body != null)) {
         bodyDef = new b2BodyDef;
-        bodyDef.position.Set(x / SCALE, y / SCALE);
+        bodyDef.position.Set(this.x / SCALE, this.y / SCALE);
         this.body = Crafty.Box2D.world.CreateBody(bodyDef);
       }
       this._w = this._h = radius * 2;
@@ -256,8 +260,6 @@
     };
     _rectangle = function(w, h) {
       var SCALE, bodyDef;
-      this.w = w;
-      this.h = h;
       if (!(this.x != null) || !(this.y != null)) {
         return this;
       }
@@ -493,13 +495,12 @@
       */
 
       hit: function(component) {
-        var contactEdge, contactPoints, finalresult, manifold, otherEntity, otherId;
+        var contactEdge, contactPoints, finalresult, manifold, otherEntity;
         contactEdge = this.body.GetContactList();
         if (!(contactEdge != null)) {
           return false;
         }
-        otherId = contactEdge.other.GetUserData();
-        otherEntity = Crafty(otherId);
+        otherEntity = contactEdge.other.GetUserData();
         if (!otherEntity.has(component)) {
           return false;
         }
@@ -533,20 +534,21 @@
         if (component !== "Box2D") {
           return this;
         }
-        this.bind("BeginContact", function(data) {
-          var hitData;
+        this.bind("BeginContact", function(_arg) {
+          var hitData, points, target;
+          target = _arg.target, points = _arg.points;
           hitData = [
             {
-              obj: Crafty(data.targetId),
+              obj: target,
               type: "Box2D",
-              points: data.points
+              points: points
             }
           ];
           return beginContact.call(_this, hitData);
         });
         if (typeof endContact === "function") {
-          this.bind("EndContact", function() {
-            return endContact.call(_this);
+          this.bind("EndContact", function(obj) {
+            return endContact.call(_this, obj);
           });
         }
         return this;

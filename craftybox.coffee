@@ -39,31 +39,28 @@ Crafty.extend
     but let the entities handle the collision.
     ###
     _setContactListener = ->
-      
       contactListener = new b2ContactListener
       contactListener.BeginContact = (contact) ->
-        entityIdA = contact.GetFixtureA().GetBody().GetUserData()
-        entityIdB = contact.GetFixtureB().GetBody().GetUserData()
+        entityA = contact.GetFixtureA().GetBody().GetUserData()
+        entityB = contact.GetFixtureB().GetBody().GetUserData()
 
         ## Getting the contact points through manifold
         manifold = new b2WorldManifold()
         contact.GetWorldManifold manifold
         contactPoints = manifold.m_points
 
-        # Crafty(id) will return the entity with that id.
-        Crafty(entityIdA).trigger "BeginContact",
+        entityA.trigger "BeginContact",
               points: contactPoints
-              targetId: entityIdB
-        Crafty(entityIdB).trigger "BeginContact", 
+              target: entityB
+        entityB.trigger "BeginContact", 
               points: contactPoints
-              targetId: entityIdA
+              target: entityA
 
       contactListener.EndContact = (contact) ->
-        entityIdA = contact.GetFixtureA().GetBody().GetUserData()
-        entityIdB = contact.GetFixtureB().GetBody().GetUserData()
-
-        Crafty(entityIdA).trigger "EndContact"
-        Crafty(entityIdB).trigger "EndContact"
+        entityA = contact.GetFixtureA().GetBody().GetUserData()
+        entityB = contact.GetFixtureB().GetBody().GetUserData()
+        entityA.trigger "EndContact", entityB
+        entityB.trigger "EndContact", entityA
 
       _world.SetContactListener contactListener
 
@@ -174,7 +171,7 @@ Crafty.c "Box2D", do ->
 
   _fixDef = null
 
-  _createBody = ({x, y, w, h, r, poly, type, density, friction, restitution}) ->
+  _createBody = ({x, y, w, h, r, poly, type, density, friction, restitution, isSensor, filter}) ->
     SCALE = Crafty.Box2D.SCALE
     # Creating a new body requires both x and y, and  ( (w and h) or r)
     bodyDef = new b2BodyDef
@@ -186,12 +183,16 @@ Crafty.c "Box2D", do ->
     Set entity's id to body's user data.
     Needed for collision detection
     ###
-    @body.SetUserData @[0]
+    @body.SetUserData @
 
     _fixDef = _fixDef ? new b2FixtureDef          
     _fixDef.density = density ? 1.0 # how heavy it is in relation to its area
     _fixDef.friction = friction ? 0.5 # how slippery it is
     _fixDef.restitution = restitution ? 0.2 # how bouncy the fixture is
+    _fixDef.isSensor = isSensor ? false
+    _fixDef.filter.categoryBits = filter?.categoryBits ? 0x0001 # I am a thing
+    _fixDef.filter.groupIndex = filter?.groupIndex ? 0
+    _fixDef.filter.maskBits = filter?.maskBits ? 0xFFFF # I collide with every other thing
 
     if r?
       _circle.call @, r
@@ -211,7 +212,7 @@ Crafty.c "Box2D", do ->
 
     if not @body?
       bodyDef = new b2BodyDef
-      bodyDef.position.Set x/SCALE, y/SCALE
+      bodyDef.position.Set @x/SCALE, @y/SCALE
       @body = Crafty.Box2D.world.CreateBody bodyDef 
 
     # Not use setters to avoid Change event
@@ -221,7 +222,7 @@ Crafty.c "Box2D", do ->
     @body.CreateFixture _fixDef
     @
 
-  _rectangle = (@w, @h) ->
+  _rectangle = (w, h) ->
     return @ if not @x? or not @y?
     SCALE = Crafty.Box2D.SCALE
 
@@ -402,8 +403,8 @@ Crafty.c "Box2D", do ->
     # Return false if no collision at this frame
     return false if not contactEdge?
 
-    otherId = contactEdge.other.GetUserData()
-    otherEntity = Crafty otherId
+    otherEntity = contactEdge.other.GetUserData()
+
     return false if not otherEntity.has component
     # A contact edge happens as soon as the two AABBs are touching, not the fixtures.
     # We only care when the fixture are actually touching.
@@ -433,13 +434,13 @@ Crafty.c "Box2D", do ->
   onHit: (component, beginContact, endContact) ->
     return @ if component isnt "Box2D"
 
-    @bind "BeginContact", (data) =>
-      hitData = [{obj: Crafty(data.targetId), type: "Box2D", points: data.points}]
+    @bind "BeginContact", ({target, points}) =>
+      hitData = [{obj: target, type: "Box2D", points: points}]
       beginContact.call @, hitData
 
     if typeof endContact is "function"
       # This is only triggered once per contact, so just execute endContact callback.
-      @bind "EndContact", =>
-        endContact.call @
+      @bind "EndContact", (obj) =>
+        endContact.call @, obj
 
     @
