@@ -30,17 +30,25 @@ describe "Rotating Calipers", ->
       ( -> new RotatingCalipers ( [ [2, 3], [4, 5], [6, 7] ] ) ).should.not.throw("Invalid vertex")
       ( -> new RotatingCalipers ( [ ["2", "3"], ["4", "5"], ["6", "7"] ] ) ).should.not.throw("Invalid vertex")
 
-    it "should be in clockwise order", ->
-
-    it "should also accept counterclockwise, but convert it", ->
-
-    it "should form a convex polygon", ->
-
   ###
   IMO, if we calculate the convex hull, the input can just be arbitrary array of points
   ###
-  describe "calculating convex hull", ->    
-    solver = null
+  describe "calculating convex hull", -> 
+
+    it "should return the same points of a triangle in clockwise order", ->
+      solver = new RotatingCalipers [ [0,0], [2,0], [1,2]]
+      hullPoints = solver.convexHull()
+      hullPoints.should.have.length 3
+      
+      hullPoints[0][0].should.equal 1
+      hullPoints[0][1].should.equal 2
+
+      hullPoints[1][0].should.equal 2
+      hullPoints[1][1].should.equal 0
+
+      hullPoints[2][0].should.equal 0
+      hullPoints[2][1].should.equal 0
+
     it "should return the aligned axis rectangle in clockwise order", ->
       solver = new RotatingCalipers [ [0,0], [1,0], [1,1], [0,1] ]
       hullPoints = solver.convexHull()

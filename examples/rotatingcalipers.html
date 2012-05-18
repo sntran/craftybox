@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>CraftyBox Example - Mouse</title>
+	 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+
+	<script src="../lib/1.jquery.min.js"></script>
+	<script src="../lib/2.jquery.tmpl.min.js"></script>
+	<script src="../lib/3.coffee.script.js"></script>
+	<script src="../lib/4.crafty.js"></script>
+	<script src="../lib/5.box2d.min.js"></script>
+	<script src="../craftybox.js"></script>
+	<script src="../RotatingCalipers.js"></script>
+</head>
+<body>
+<script>
+window.onload = function() {
+	Crafty.init(800, 600);
+	Crafty.canvas.init();
+	Crafty.Box2D.debug = true;
+
+	var points = [];
+
+	var setPoint = function(e) {
+		var pos = Crafty.DOM.translate(e.clientX, e.clientY),
+			tar = e.target ? e.target : e.srcElement;
+
+		points.push([pos.x, pos.y]);
+		draw();
+	}
+	
+	Crafty.addEvent(this, Crafty.stage.elem, "click", setPoint);
+
+
+	var draw = function () {
+		var ctx = Crafty.canvas.context;
+		if (points.length === 2) {
+			ctx.beginPath();
+    	ctx.moveTo(points[0][0], points[0][1]);
+    	ctx.lineTo(points[1][0], points[1][1]);
+    	ctx.closePath();
+    	ctx.stroke();
+		} else if (points.length > 2) {
+			var solver = new RotatingCalipers( points )
+			var hull = solver.convexHull();
+			solver.minEnclosingAreaRectangle();
+
+			var ctx = Crafty.canvas.context;
+			ctx.clearRect(0,0,Crafty.viewport.width,Crafty.viewport.height);
+
+			ctx.strokeStyle = "black";
+			ctx.beginPath();
+	    ctx.moveTo(hull[0][0], hull[0][1]);
+
+	    for (var i = 1; i < hull.length; i++) {
+	    	ctx.lineTo(hull[i][0], hull[i][1])
+	    };
+	    ctx.closePath();
+	    ctx.stroke();
+
+			for (var i = 0; i < points.length; i++) {
+				ctx.arc(points[i][0], points[i][1], 5, 0, 2 * Math.PI, false);
+			};
+		}
+	}
+
+}
+</script>
+</body>
+</html>

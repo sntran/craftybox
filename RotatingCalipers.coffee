@@ -101,16 +101,20 @@ class window.RotatingCalipers
   ###
   convexHull: ->
     finder = (arr) ->
-      ret = []
-      ret[0] = ret[1] = arr[0]
+      ret = {}
+      ret.min = ret.max = arr[0]
       for el in arr
-        ret[0] = el if el[0] < ret[0][0]
-        ret[1] = el if el[0] > ret[0][0]
+        ret.min = el if el[0] < ret.min[0]
+        ret.max = el if el[0] > ret.max[0]
       ret
 
     extremeX = finder(_inputVertices)
-    _quickHull(_inputVertices, extremeX[0], extremeX[1])
-      .concat _quickHull(_inputVertices, extremeX[1], extremeX[0])
+    _quickHull(_inputVertices, extremeX.min, extremeX.max)
+      .concat _quickHull(_inputVertices, extremeX.max, extremeX.min)
+
+  minEnclosingAreaRectangle: ->
+    points = @convexHull()
+    
 
 
 
