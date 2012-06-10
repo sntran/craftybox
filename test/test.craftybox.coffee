@@ -17,161 +17,433 @@ describe "CraftyBox Component", ->
     it "should not have a body", ->
       should.not.exist Crafty.e("Box2D").body
 
-  describe "when setting attributes", ->
+  describe "creating shape", ->
+    SCALE = null
     ent = null
+
+    before ->
+      Crafty.Box2D.init()
+      SCALE = Crafty.Box2D.SCALE
 
     beforeEach ->
       ent = Crafty.e("Box2D")
 
-    afterEach ->
-      ent.destroy()
-      Crafty.Box2D.destroy()
+    describe "rectangle", ->
+      it "should create the body", ->
+        should.exist ent.rectangle(10, 10).body
 
-    it "should not create a body when missing x or y", ->
-      ent.attr({x:30})
-      should.not.exist ent.body
-      ent = Crafty.e("Box2D").attr({y:30})
-      should.not.exist ent.body
+      it "should use entity's position if any to create body", ->
+        ent.attr({x: 10, y: 10})
+        ent.rectangle(15, 15)
+        should.exist ent.body
+        pos = ent.body.GetPosition()
+        pos.x.should.equal ent.x/SCALE
+        pos.y.should.equal ent.y/SCALE
 
-    it "should have a body when x and y provided", ->
-      ent.attr({x:30, y: 30})
-      should.exist ent.body
+      it "should set to 0,0 if no entity's position", ->
+        ent.rectangle(15, 15)
+        should.exist ent.body
+        pos = ent.body.GetPosition()
+        pos.x.should.equal 0
+        pos.y.should.equal 0
 
-    it "should have the the body at position specified (with SCALE)", ->
-      attrs = {x: 30, y: 30}
-      ent.attr attrs
+      it "should set entity's x and y if no body", ->
+        ent.rectangle(15, 15, 10, 10)
+        ent.x.should.equal 10
+        ent.y.should.equal 10
+
+      it "should take a width and height and make the rectangle fixture", ->
+        w = 30
+        h = 15
+        ent.rectangle(w, h)
+        shape = ent.body.GetFixtureList().GetShape()
+        shape.should.be.an.instanceof(b2PolygonShape)
+        shape.GetVertexCount().should.equal 4
+        vertices = shape.GetVertices()
+
+        w = w/SCALE
+        h = h/SCALE    
+        # Note: vertices are in local cordinates
+        # Origin is at the top left
+        #  0,0 --- 0 --- v1
+        #  |             |
+        #  |             |
+        #  |             |
+        #  v3 --- 0 --- v4
+        vertices[0].should.eql {x: 0, y: 0}
+        vertices[1].should.eql {x: w, y: 0}
+        vertices[2].should.eql {x: w, y: h}
+        vertices[3].should.eql {x: 0, y: h}
+
+      it "should set the width and height of entity", ->
+        w = 30
+        h = 15
+        ent.rectangle w, h
+        ent.w.should.equal w
+        ent.h.should.equal h
+
+      it "should allow setting density property", ->
+        density = 1.0
+        ent.rectangle(30, 15, 10, 10, {density: density})
+        fixture = ent.body.GetFixtureList()
+        fixture.GetDensity().should.equal(density)
+
+      it "should allow setting any other properties", ->
+        attrs = 
+          friction: 0.5
+          restitution: 0.2
+          isSensor: true
+          userData: ent
+          filter:
+            categoryBits: 0x0001
+            maskBits: 0x0001
+            groupIndex: 0
+
+        ent.rectangle(30, 15, 10, 10, attrs)
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal(attrs.friction)
+        fixture.GetRestitution().should.equal(attrs.restitution)
+        fixture.IsSensor().should.equal(attrs.isSensor)
+        fixture.GetUserData().should.eql(attrs.userData)
+        fixture.GetFilterData().should.eql(attrs.filter)
+
+
+      it "should also allow setting properties without x and y", ->
+        attrs = 
+          friction: 0.5
+          restitution: 0.2
+          isSensor: true
+          userData: ent
+          filter:
+            categoryBits: 0x0001
+            maskBits: 0x0001
+            groupIndex: 0
+
+        ent.rectangle(30, 15, attrs)
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal(attrs.friction)
+        fixture.GetRestitution().should.equal(attrs.restitution)
+        fixture.IsSensor().should.equal(attrs.isSensor)
+        fixture.GetUserData().should.eql(attrs.userData)
+        fixture.GetFilterData().should.eql(attrs.filter)
+
+    describe "circle", ->
+      it "should create the body", ->
+        should.exist ent.circle(10).body
+
+      it "should use entity's position if any to create body", ->
+        ent.attr {x: 10, y: 10}
+        ent.circle 15
+        should.exist ent.body
+        pos = ent.body.GetPosition()
+        pos.x.should.equal ent.x/SCALE
+        pos.y.should.equal ent.y/SCALE
+
+      it "should set to 0,0 if no entity's position", ->
+        ent.circle(15)
+        should.exist ent.body
+        pos = ent.body.GetPosition()
+        pos.x.should.equal 0
+        pos.y.should.equal 0
+
+      it "should set entity's x and y if no body", ->
+        ent.circle(15, 10, 10)
+        ent.x.should.equal 10
+        ent.y.should.equal 10
+
+      it "should take a radius and make a circle shape", ->
+        r = 30
+        ent.circle r
+        shape = ent.body.GetFixtureList().GetShape()
+        shape.should.be.an.instanceof(b2CircleShape)
+        shape.GetRadius().should.equal(r/SCALE)
+
+      it "should set width and height of entity", ->
+        r = 30
+        ent.circle r
+        ent.w.should.equal r*2
+        ent.h.should.equal r*2
+
+      it "should have its local position at its center", ->
+        r = 30
+        ent.circle r
+        localPosition = ent.body.GetFixtureList().GetShape().GetLocalPosition()
+        localPosition.x.should.equal (ent.x + r)/SCALE
+        localPosition.y.should.equal (ent.y + r)/SCALE
+
+      it "should allow setting density property", ->
+        density = 1.0
+        ent.circle(30, 10, 10, {density: density})
+        fixture = ent.body.GetFixtureList()
+        fixture.GetDensity().should.equal(density)
+
+      it "should allow setting any other properties", ->
+        attrs = 
+          friction: 0.5
+          restitution: 0.2
+          isSensor: true
+          userData: ent
+          filter:
+            categoryBits: 0x0001
+            maskBits: 0x0001
+            groupIndex: 0
+
+        ent.circle(30, 10, 10, attrs)
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal(attrs.friction)
+        fixture.GetRestitution().should.equal(attrs.restitution)
+        fixture.IsSensor().should.equal(attrs.isSensor)
+        fixture.GetUserData().should.eql(attrs.userData)
+        fixture.GetFilterData().should.eql(attrs.filter)
+
+
+      it "should also allow setting properties without x and y", ->
+        attrs = 
+          friction: 0.5
+          restitution: 0.2
+          isSensor: true
+          userData: ent
+          filter:
+            categoryBits: 0x0001
+            maskBits: 0x0001
+            groupIndex: 0
+
+        ent.circle(30, attrs)
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal(attrs.friction)
+        fixture.GetRestitution().should.equal(attrs.restitution)
+        fixture.IsSensor().should.equal(attrs.isSensor)
+        fixture.GetUserData().should.eql(attrs.userData)
+        fixture.GetFilterData().should.eql(attrs.filter)
+   
+    describe "polygon", ->
+      it "should create the body", ->
+        should.exist ent.polygon([[30,30], [60,60], [0,0]]).body
+
+      it "should take an array of points in clockwise order by default", ->
+        ###
+           --->
+            __
+          x/  |
+          |___|
+        ###
+        points = [[0,30], [30, 0], [60,0], [60,60], [0, 60]]
+        ent.polygon points
+        shape = ent.body.GetFixtureList().GetShape()
+        shape.should.be.an.instanceof(b2PolygonShape)
+        shape.GetVertexCount().should.equal points.length
+        vertices = shape.GetVertices()
+        for v, i in vertices
+          v.x.should.equal(points[i][0]/SCALE)
+          v.y.should.equal(points[i][1]/SCALE)
+
+      it "should also take an array of points in anti-clockwise order", ->
+        ###
+             __
+        |  x/  |
+        V  |___|
+
+        By default, Box2D will draw, but it won't collide.
+        As long as the points forming a convex polygon,
+        reorder to be clock-wise.
+        ###
+        points = [[0,30], [0,60], [60,60], [60, 0], [30, 0]]
+        ent.polygon points
+        shape = ent.body.GetFixtureList().GetShape()
+        shape.should.be.an.instanceof(b2PolygonShape)
+        shape.GetVertexCount().should.equal points.length
+        vertices = shape.GetVertices()
+
+        points = [[0,30], [30, 0], [60,0], [60,60], [0, 60]]
+        for v, i in vertices
+          v.x.should.equal(points[i][0]/SCALE)
+          v.y.should.equal(points[i][1]/SCALE)
+
+      it "should also take arbitrary order of points", ->
+        ###
+              /|
+           __/ |
+          | /\ | 
+          |/  \|
+
+        By default, Box2D will draw, but it won't collide correctly.
+        The middle point will be ignored. It will become like this:
+
+             / | 
+           /   |
+          |    | 
+          |____|
+        ###
+        points = [[0,30], [0,60], [30,0], [30, 60], [15,30]]
+        ent.polygon points
+        shape = ent.body.GetFixtureList().GetShape()
+        shape.should.be.an.instanceof(b2PolygonShape)
+
+        points = [[0,30], [30,0], [30,60], [0,60]]
+        shape.GetVertexCount().should.equal points.length
+        vertices = shape.GetVertices()
+        for v, i in vertices
+          v.x.should.equal(points[i][0]/SCALE)
+          v.y.should.equal(points[i][1]/SCALE)
+
+      describe "with minimal area enclosing rectangle", ->
+        rotate = (point, rad, origin) ->
+          result = []
+          offX = point[0] - origin[0]
+          offY = point[1] - origin[1]
+          result[0] = Math.cos(rad) * offX - Math.sin(rad) * offY + origin[0]
+          result[1] = Math.sin(rad) * offX + Math.cos(rad) * offY + origin[1]
+          return result
+
+        getMiddlePoint = (i, a) ->
+          [ 
+            (a[ (i+1)%a.length ][0] - a[i][0]) / 2 + a[i][0]
+            (a[ (i+1)%a.length ][1] - a[i][1]) / 2 + a[i][1] 
+          ]
+
+        getSide = (i, a) ->
+          d = Crafty.math.distance
+          Math.round(d(a[i][0], a[i][1], a[(i+1)%a.length][0], a[(i+1)%a.length][1]))
+
+        maer = {}
+
+        beforeEach ->
+          x = 60
+          y = 60
+          w = 60
+          h = 30
+          rotation = -Math.PI/4
+          aabb = [[x,y], [x+w,y], [x+w,y+h], [x,y+h]]
+          origin = [x+(w/2), y+(h/2)]
+          ### Rotate the AABB around its origin ###
+          maer.vertices = (rotate point, rotation, origin for point in aabb)
+          maer.w = w
+          maer.h = h
+          sides = (getSide i, maer for point, i in maer)
+          
+        it "should set width and height of entity for polygon same as MAER", ->
+          ###          
+          The simplest polygon enclosed by the MAER is the MAER itself
+          ###
+          ent.w.should.equal 0
+          ent.h.should.equal 0
+          points = maer.vertices
+          ent.polygon points
+          ent.w.should.equal maer.w
+          ent.h.should.equal maer.h                                                  
+
+        it "should set entity's x and y after calculating the polygon"
+
+        it "should also reset entity's x and y when MAER is not MBR", ->
+          ###
+             --->
+               ___
+              /   \
+            x/     \
+              \    /
+                \ /
+          
+          Since Crafty's entity uses x, y as top-left corner, need to
+          reset it based on the MAER. In this case, the MAER is not 
+          the same as MBR, and thus the x, y are different.
+          ###
+          ent.x.should.equal 0
+          ent.y.should.equal 0
+          points = [[0,30], [30,0], [60,0], [90,30], [60,60]]
+          ent.polygon points
+          ent.x.should.not.equal 0
+          ent.y.should.not.equal 0
+
+      it "should have the x and y as the least rotating point from AABB"
+
+      it "should break concave-forming points into convex fixtures"
+
+
+    describe "mix and match", ->
+      ###
+      The order of fixtures in body is LIFO
+      ###
+      it "should have many shapes of same fixture", ->
+        ent.rectangle(10, 10)
+        fixture = ent.body.GetFixtureList()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2PolygonShape)
+        should.not.exist fixture.GetNext()
+
+        ent.rectangle(15, 15)
+        fixture = ent.body.GetFixtureList()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2PolygonShape)
+        fixture = fixture.GetNext()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2PolygonShape)
+
+      it "should have many shapes of different fixture", ->
+        ent.rectangle(10, 10)
+        fixture = ent.body.GetFixtureList()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2PolygonShape)
+        should.not.exist fixture.GetNext()
+
+        ent.circle(15)
+        fixture = ent.body.GetFixtureList()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2CircleShape)
+        fixture = fixture.GetNext()
+        should.exist fixture
+        fixture.GetShape().should.be.an.instanceof(b2PolygonShape)
+
+      it "should not reset entity's x and y when body exist", ->
+        ent.rectangle(10, 10, 15, 15)
+        ent.rectangle(10, 10, 30, 30)
+        ent.x.should.equal 15
+        ent.y.should.equal 15
+
+      it "should have different shapes with different properties", ->
+        friction = 0.5
+        density = 0.2
+        isSensor = true
+
+        ent.rectangle(10, 10, {friction: friction, density: density})
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal friction
+        fixture.GetDensity().should.equal density
+        fixture.IsSensor().should.not.be.ok
+
+        newDensity = 0.7
+        ent.circle(10, {density: newDensity, isSensor: isSensor})
+        fixture = ent.body.GetFixtureList()
+        fixture.GetFriction().should.equal friction
+        fixture.GetDensity().should.equal newDensity
+        fixture.IsSensor().should.be.ok
+
+  describe "setting body attributes", ->
+    SCALE = null
+    ent = null
+
+    before ->
+      Crafty.Box2D.init()
       SCALE = Crafty.Box2D.SCALE
-      ent.body.GetPosition().x.should.equal attrs.x/SCALE
-      ent.body.GetPosition().y.should.equal attrs.y/SCALE
 
-    it "should not create a new body when .attr is called again with x and y", ->
+    beforeEach ->
+      ent = Crafty.e("Box2D").rectangle(10, 10)
 
-    it "should change position when changing x or y", ->
-      attrs = {x: 30, y: 30}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      ent.x = 60
-      ent.body.GetPosition().x.should.equal 60/SCALE
-      ent.body.GetPosition().y.should.equal attrs.y/SCALE
-      ent.x = 80
-      ent.y = 70
-      ent.body.GetPosition().x.should.equal 80/SCALE
-      ent.body.GetPosition().y.should.equal 70/SCALE
+    it "could check the body type", ->
+      ent.bodyType().should.equal "static"
+      ent.body.GetType().should.equal b2Body.b2_staticBody
 
-    it "should only set new position when body exists", ->
-      attrs = {x: 30, y: 30}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      Crafty.Box2D.world.GetBodyCount().should.equal 1
-      ent.attr {x: 50, y: 50}
-      Crafty.Box2D.world.GetBodyCount().should.not.equal 2
-      Crafty.Box2D.world.GetBodyCount().should.equal 1
-      ent.body.GetPosition().x.should.equal 50/SCALE
-      ent.body.GetPosition().y.should.equal 50/SCALE
+    it "could change type", ->      
+      ent.bodyType "dynamic"
+      ent.body.GetType().should.equal b2Body.b2_dynamicBody
+      ent.bodyType().should.equal "dynamic"
 
-    it "should have no fixture when only x and y provided", ->
-      attrs = {x: 30, y: 30}
-      ent.attr attrs
-      should.not.exist ent.body.GetFixtureList()
+    it "should not change to invalid type", ->
+      type = ent.bodyType()
+      ent.bodyType("something_weird").bodyType().should.equal type
 
-    it "should create a rectangle with w and h provided", ->
-      attrs = {x:1800, y: 250, w:1800, h:30}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      shape = ent.body.GetFixtureList().GetShape()
-      shape.should.be.an.instanceof(b2PolygonShape)
-      shape.GetVertexCount().should.equal 4
-      vertices = shape.GetVertices()
+  describe "apply setting to all fixtures", ->
 
-      w = attrs.w/SCALE
-      h = attrs.h/SCALE    
-      # Note: vertices are in local cordinates
-      vertices[0].should.eql {x: 0, y: 0}
-      vertices[1].should.eql {x: w, y: 0}
-      vertices[2].should.eql {x: w, y: h}
-      vertices[3].should.eql {x: 0, y: h}
-
-    it "should create a square with only w provided", ->
-      attrs = {x:1800, y: 250, w:1800}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      shape = ent.body.GetFixtureList().GetShape()
-      shape.should.be.an.instanceof(b2PolygonShape)
-      shape.GetVertexCount().should.equal 4
-      vertices = shape.GetVertices()
-
-      side = attrs.w/SCALE
-      # Note: vertices are in local cordinates
-      vertices[0].should.eql {x: 0, y: 0}
-      vertices[1].should.eql {x: side, y: 0}
-      vertices[2].should.eql {x: side, y: side}
-      vertices[3].should.eql {x: 0, y: side}
-
-    it "should create a square with only h provided", ->
-      attrs = {x:1800, y: 250, h:1800}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      shape = ent.body.GetFixtureList().GetShape()
-      shape.should.be.an.instanceof(b2PolygonShape)
-      shape.GetVertexCount().should.equal 4
-      vertices = shape.GetVertices()
-
-      side = attrs.h/SCALE
-      # Note: vertices are in local cordinates
-      vertices[0].should.eql {x: 0, y: 0}
-      vertices[1].should.eql {x: side, y: 0}
-      vertices[2].should.eql {x: side, y: side}
-      vertices[3].should.eql {x: 0, y: side}
-
-    it "should have same h with only w provided", ->
-      attrs = {x:1800, y: 250, w:1800}
-      ent.attr attrs
-      ent.h.should.equal attrs.w
-
-    it "should have same w with only h provided", ->
-      attrs = {x:1800, y: 250, h:1800}
-      ent.attr attrs
-      ent.w.should.equal attrs.h
-
-    it "should create a circle with r provided", ->
-      attrs = {x:1800, y: 250, r:30}
-      ent.attr attrs
-      shape = ent.body.GetFixtureList().GetShape()
-      shape.should.be.an.instanceof b2CircleShape
-
-    it "should have the correct radius", ->
-      attrs = {x:1800, y: 250, r:30}
-      ent.attr attrs
-      ent.r.should.equal attrs.r
-
-    it "should have w and h when creating circle", ->
-      attrs = {x:1800, y: 250, r:30}
-      ent.attr attrs
-      ent.w.should.equal attrs.r*2
-      ent.h.should.equal attrs.r*2
-
-    it "should set the local position of the circle to the center", ->
-      attrs = {x:1800, y: 250, r:30}
-      ent.attr attrs
-      SCALE = Crafty.Box2D.SCALE
-      shape = ent.body.GetFixtureList().GetShape()
-      local = shape.GetLocalPosition()
-      local.x.should.equal attrs.r/SCALE
-      local.y.should.equal attrs.r/SCALE
-
-    it "should be static by default", ->
-      attrs = {x:1800, y: 250, r:30}
-      ent.attr attrs
-      type = ent.body.GetDefinition().type
-      type.should.equal b2Body.b2_staticBody
-
-    it "should become dynamic if specified", ->
-      attrs = {x:1800, y: 250, r:30, dynamic: true}
-      ent.attr attrs
-      type = ent.body.GetDefinition().type
-      type.should.equal b2Body.b2_dynamicBody      
-
-  describe "2D Component", ->
+  ###describe "2D Component", ->
     rectangle = null
     circle = null
     recAttrs = {x:100, y: 100, w:50, h: 50}
@@ -323,22 +595,6 @@ describe "CraftyBox Component", ->
 
     describe ".origin(x, y)", ->
     describe ".flip(dir)", ->
-    describe ".rotate(e)", ->
-      
-  describe "creation helpers (.circle, .rectangle, ...)", ->
-    it "should ignore when @body is not defined", ->
-      ent = Crafty.e("Box2D").circle(10)
-      should.not.exist ent.body
-      ent.rectangle(10, 15)
-      should.not.exist ent.body
-
-  describe "Collision", ->
-    it "should store entity's id to body's user data", ->
-      ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
-      ent.body.GetUserData().should.equal ent[0]
-
-    describe ".onHit(compopent, beginContact, endContact)", ->
-      it "should only check with other Box2D entity", ->
-        ent = Crafty.e("Box2D").attr({x: 30, y: 30, r: 30})
+    describe ".rotate(e)", ->###
 
 

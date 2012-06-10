@@ -24,384 +24,57 @@
         return should.not.exist(Crafty.e("Box2D").body);
       });
     });
-    describe("when setting attributes", function() {
-      var ent;
+    describe("creating shape", function() {
+      var SCALE, ent;
+      SCALE = null;
       ent = null;
+      before(function() {
+        Crafty.Box2D.init();
+        return SCALE = Crafty.Box2D.SCALE;
+      });
       beforeEach(function() {
         return ent = Crafty.e("Box2D");
       });
-      afterEach(function() {
-        ent.destroy();
-        return Crafty.Box2D.destroy();
-      });
-      it("should not create a body when missing x or y", function() {
-        ent.attr({
-          x: 30
+      describe("rectangle", function() {
+        it("should create the body", function() {
+          return should.exist(ent.rectangle(10, 10).body);
         });
-        should.not.exist(ent.body);
-        ent = Crafty.e("Box2D").attr({
-          y: 30
-        });
-        return should.not.exist(ent.body);
-      });
-      it("should have a body when x and y provided", function() {
-        ent.attr({
-          x: 30,
-          y: 30
-        });
-        return should.exist(ent.body);
-      });
-      it("should have the the body at position specified (with SCALE)", function() {
-        var SCALE, attrs;
-        attrs = {
-          x: 30,
-          y: 30
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        ent.body.GetPosition().x.should.equal(attrs.x / SCALE);
-        return ent.body.GetPosition().y.should.equal(attrs.y / SCALE);
-      });
-      it("should not create a new body when .attr is called again with x and y", function() {});
-      it("should change position when changing x or y", function() {
-        var SCALE, attrs;
-        attrs = {
-          x: 30,
-          y: 30
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        ent.x = 60;
-        ent.body.GetPosition().x.should.equal(60 / SCALE);
-        ent.body.GetPosition().y.should.equal(attrs.y / SCALE);
-        ent.x = 80;
-        ent.y = 70;
-        ent.body.GetPosition().x.should.equal(80 / SCALE);
-        return ent.body.GetPosition().y.should.equal(70 / SCALE);
-      });
-      it("should only set new position when body exists", function() {
-        var SCALE, attrs;
-        attrs = {
-          x: 30,
-          y: 30
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        Crafty.Box2D.world.GetBodyCount().should.equal(1);
-        ent.attr({
-          x: 50,
-          y: 50
-        });
-        Crafty.Box2D.world.GetBodyCount().should.not.equal(2);
-        Crafty.Box2D.world.GetBodyCount().should.equal(1);
-        ent.body.GetPosition().x.should.equal(50 / SCALE);
-        return ent.body.GetPosition().y.should.equal(50 / SCALE);
-      });
-      it("should have no fixture when only x and y provided", function() {
-        var attrs;
-        attrs = {
-          x: 30,
-          y: 30
-        };
-        ent.attr(attrs);
-        return should.not.exist(ent.body.GetFixtureList());
-      });
-      it("should create a rectangle with w and h provided", function() {
-        var SCALE, attrs, h, shape, vertices, w;
-        attrs = {
-          x: 1800,
-          y: 250,
-          w: 1800,
-          h: 30
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        shape = ent.body.GetFixtureList().GetShape();
-        shape.should.be.an["instanceof"](b2PolygonShape);
-        shape.GetVertexCount().should.equal(4);
-        vertices = shape.GetVertices();
-        w = attrs.w / SCALE;
-        h = attrs.h / SCALE;
-        vertices[0].should.eql({
-          x: 0,
-          y: 0
-        });
-        vertices[1].should.eql({
-          x: w,
-          y: 0
-        });
-        vertices[2].should.eql({
-          x: w,
-          y: h
-        });
-        return vertices[3].should.eql({
-          x: 0,
-          y: h
-        });
-      });
-      it("should create a square with only w provided", function() {
-        var SCALE, attrs, shape, side, vertices;
-        attrs = {
-          x: 1800,
-          y: 250,
-          w: 1800
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        shape = ent.body.GetFixtureList().GetShape();
-        shape.should.be.an["instanceof"](b2PolygonShape);
-        shape.GetVertexCount().should.equal(4);
-        vertices = shape.GetVertices();
-        side = attrs.w / SCALE;
-        vertices[0].should.eql({
-          x: 0,
-          y: 0
-        });
-        vertices[1].should.eql({
-          x: side,
-          y: 0
-        });
-        vertices[2].should.eql({
-          x: side,
-          y: side
-        });
-        return vertices[3].should.eql({
-          x: 0,
-          y: side
-        });
-      });
-      it("should create a square with only h provided", function() {
-        var SCALE, attrs, shape, side, vertices;
-        attrs = {
-          x: 1800,
-          y: 250,
-          h: 1800
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        shape = ent.body.GetFixtureList().GetShape();
-        shape.should.be.an["instanceof"](b2PolygonShape);
-        shape.GetVertexCount().should.equal(4);
-        vertices = shape.GetVertices();
-        side = attrs.h / SCALE;
-        vertices[0].should.eql({
-          x: 0,
-          y: 0
-        });
-        vertices[1].should.eql({
-          x: side,
-          y: 0
-        });
-        vertices[2].should.eql({
-          x: side,
-          y: side
-        });
-        return vertices[3].should.eql({
-          x: 0,
-          y: side
-        });
-      });
-      it("should have same h with only w provided", function() {
-        var attrs;
-        attrs = {
-          x: 1800,
-          y: 250,
-          w: 1800
-        };
-        ent.attr(attrs);
-        return ent.h.should.equal(attrs.w);
-      });
-      it("should have same w with only h provided", function() {
-        var attrs;
-        attrs = {
-          x: 1800,
-          y: 250,
-          h: 1800
-        };
-        ent.attr(attrs);
-        return ent.w.should.equal(attrs.h);
-      });
-      it("should create a circle with r provided", function() {
-        var attrs, shape;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30
-        };
-        ent.attr(attrs);
-        shape = ent.body.GetFixtureList().GetShape();
-        return shape.should.be.an["instanceof"](b2CircleShape);
-      });
-      it("should have the correct radius", function() {
-        var attrs;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30
-        };
-        ent.attr(attrs);
-        return ent.r.should.equal(attrs.r);
-      });
-      it("should have w and h when creating circle", function() {
-        var attrs;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30
-        };
-        ent.attr(attrs);
-        ent.w.should.equal(attrs.r * 2);
-        return ent.h.should.equal(attrs.r * 2);
-      });
-      it("should set the local position of the circle to the center", function() {
-        var SCALE, attrs, local, shape;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30
-        };
-        ent.attr(attrs);
-        SCALE = Crafty.Box2D.SCALE;
-        shape = ent.body.GetFixtureList().GetShape();
-        local = shape.GetLocalPosition();
-        local.x.should.equal(attrs.r / SCALE);
-        return local.y.should.equal(attrs.r / SCALE);
-      });
-      it("should be static by default", function() {
-        var attrs, type;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30
-        };
-        ent.attr(attrs);
-        type = ent.body.GetDefinition().type;
-        return type.should.equal(b2Body.b2_staticBody);
-      });
-      return it("should become dynamic if specified", function() {
-        var attrs, type;
-        attrs = {
-          x: 1800,
-          y: 250,
-          r: 30,
-          dynamic: true
-        };
-        ent.attr(attrs);
-        type = ent.body.GetDefinition().type;
-        return type.should.equal(b2Body.b2_dynamicBody);
-      });
-    });
-    describe("2D Component", function() {
-      var SCALE, cirAttrs, circle, recAttrs, rectangle;
-      rectangle = null;
-      circle = null;
-      recAttrs = {
-        x: 100,
-        y: 100,
-        w: 50,
-        h: 50
-      };
-      cirAttrs = {
-        x: 100,
-        y: 100,
-        r: 50
-      };
-      SCALE = 0;
-      beforeEach(function() {
-        rectangle = Crafty.e("Box2D").attr(recAttrs);
-        circle = Crafty.e("Box2D").attr(cirAttrs);
-        return SCALE = Crafty.Box2D.SCALE;
-      });
-      describe(".area()", function() {
-        it("should return w * h for rectangle", function() {
-          return rectangle.area().should.equal(recAttrs.w * recAttrs.h);
-        });
-        return it("should return PI*r", function() {
-          return circle.area().should.equal(cirAttrs.r * Math.PI);
-        });
-      });
-      describe(".intersect(x, y, w, h)", function() {
-        it("should intesect with (100, 100, 50, 50) for rectangle", function() {
-          return rectangle.intersect(100, 100, 50, 50).should.be["true"];
-        });
-        return it("should not intesect with (0, 0, 100, 100) for rectangle", function() {
-          return rectangle.intersect(0, 0, 100, 100).should.be["false"];
-        });
-      });
-      describe(".within(x, y, w, h)", function() {});
-      describe(".contains(x, y, w, h)", function() {});
-      describe(".pos()", function() {});
-      describe(".mbr()", function() {});
-      describe(".isAt(x, y) #used for below tests", function() {
-        return it("should check for both 2D and Box2D", function() {
-          rectangle.isAt(recAttrs.x, recAttrs.y).should.be["true"];
-          rectangle.body.GetPosition().x.should.equal(recAttrs.x / SCALE);
-          return rectangle.body.GetPosition().y.should.equal(recAttrs.y / SCALE);
-        });
-      });
-      describe(".move(dir, by)", function() {
-        return it("should has x and y at the specified location", function() {
-          var amount;
-          amount = 10;
-          rectangle.move("n", amount).isAt(recAttrs.x, recAttrs.y - amount).should.be["true"];
-          rectangle.move("s", amount).isAt(recAttrs.x, recAttrs.y).should.be["true"];
-          rectangle.move("e", amount).isAt(recAttrs.x + amount, recAttrs.y).should.be["true"];
-          return rectangle.move("w", amount).isAt(recAttrs.x, recAttrs.y).should.be["true"];
-        });
-      });
-      describe(".shift(x, y, w, h)", function() {
-        it("should move the entity by an amount in specified direction", function() {
-          rectangle.shift(10).isAt(recAttrs.x + 10, recAttrs.y).should.be["true"];
-          rectangle.shift(-10).isAt(recAttrs.x, recAttrs.y).should.be["true"];
-          return rectangle.shift(-10, 10).isAt(recAttrs.x - 10, recAttrs.y + 10).should.be["true"];
-        });
-        it("should change width and/or height for rectangle", function() {
-          var h, vertices, w;
-          rectangle.shift(0, 0, 10).w.should.equal(recAttrs.w + 10);
-          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
-          w = (recAttrs.w + 10) / SCALE;
-          h = recAttrs.h / SCALE;
-          vertices[0].should.eql({
-            x: 0,
-            y: 0
+        it("should use entity's position if any to create body", function() {
+          var pos;
+          ent.attr({
+            x: 10,
+            y: 10
           });
-          vertices[1].should.eql({
-            x: w,
-            y: 0
-          });
-          vertices[2].should.eql({
-            x: w,
-            y: h
-          });
-          vertices[3].should.eql({
-            x: 0,
-            y: h
-          });
-          rectangle.shift(0, 0, -10).w.should.equal(recAttrs.w);
-          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
-          w = recAttrs.w / SCALE;
-          h = recAttrs.h / SCALE;
-          vertices[0].should.eql({
-            x: 0,
-            y: 0
-          });
-          vertices[1].should.eql({
-            x: w,
-            y: 0
-          });
-          vertices[2].should.eql({
-            x: w,
-            y: h
-          });
-          vertices[3].should.eql({
-            x: 0,
-            y: h
-          });
-          rectangle.shift(0, 0, -10, 10).w.should.equal(recAttrs.w - 10);
-          rectangle.h.should.equal(recAttrs.h + 10);
-          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices();
-          w = (recAttrs.w - 10) / SCALE;
-          h = (recAttrs.h + 10) / SCALE;
+          ent.rectangle(15, 15);
+          should.exist(ent.body);
+          pos = ent.body.GetPosition();
+          pos.x.should.equal(ent.x / SCALE);
+          return pos.y.should.equal(ent.y / SCALE);
+        });
+        it("should set to 0,0 if no entity's position", function() {
+          var pos;
+          ent.rectangle(15, 15);
+          should.exist(ent.body);
+          pos = ent.body.GetPosition();
+          pos.x.should.equal(0);
+          return pos.y.should.equal(0);
+        });
+        it("should set entity's x and y if no body", function() {
+          ent.rectangle(15, 15, 10, 10);
+          ent.x.should.equal(10);
+          return ent.y.should.equal(10);
+        });
+        it("should take a width and height and make the rectangle fixture", function() {
+          var h, shape, vertices, w;
+          w = 30;
+          h = 15;
+          ent.rectangle(w, h);
+          shape = ent.body.GetFixtureList().GetShape();
+          shape.should.be.an["instanceof"](b2PolygonShape);
+          shape.GetVertexCount().should.equal(4);
+          vertices = shape.GetVertices();
+          w = w / SCALE;
+          h = h / SCALE;
           vertices[0].should.eql({
             x: 0,
             y: 0
@@ -419,91 +92,596 @@
             y: h
           });
         });
-        it("should change radius for circle", function() {
-          circle.shift(0, 0, 30).r.should.equal(cirAttrs.r + 30);
-          return circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
+        it("should set the width and height of entity", function() {
+          var h, w;
+          w = 30;
+          h = 15;
+          ent.rectangle(w, h);
+          ent.w.should.equal(w);
+          return ent.h.should.equal(h);
         });
-        it("should only shift the third param for radius", function() {
-          circle.shift(0, 0, 30, 60).r.should.equal(cirAttrs.r + 30);
-          circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
-          circle.shift(0, 0, 0, 60).r.should.equal(cirAttrs.r + 30);
-          return circle.body.GetFixtureList().GetShape().GetRadius().should.equal((cirAttrs.r + 30) / SCALE);
+        it("should allow setting density property", function() {
+          var density, fixture;
+          density = 1.0;
+          ent.rectangle(30, 15, 10, 10, {
+            density: density
+          });
+          fixture = ent.body.GetFixtureList();
+          return fixture.GetDensity().should.equal(density);
         });
-        it("should set new width and height for circle", function() {
-          circle.shift(0, 0, 30).w.should.equal((cirAttrs.r + 30) * 2);
-          return circle.h.should.equal((cirAttrs.r + 30) * 2);
-        });
-        return it("should not set new width and height for circle when no third param", function() {
-          circle.shift(0, 0, 0, 30).w.should.equal(cirAttrs.r * 2);
-          return circle.h.should.equal(cirAttrs.r * 2);
-        });
-      });
-      describe(".attach(Entity obj[, .., Entity objN])", function() {
-        return it("should move the follower", function() {
-          var amount, attrs, follower;
+        it("should allow setting any other properties", function() {
+          var attrs, fixture;
           attrs = {
-            x: 200,
-            y: 200,
-            w: 50,
-            h: 50
+            friction: 0.5,
+            restitution: 0.2,
+            isSensor: true,
+            userData: ent,
+            filter: {
+              categoryBits: 0x0001,
+              maskBits: 0x0001,
+              groupIndex: 0
+            }
           };
-          follower = Crafty.e("Box2D").attr(attrs);
-          amount = 30;
-          rectangle.attach(follower).move("n", amount);
-          return follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
+          ent.rectangle(30, 15, 10, 10, attrs);
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(attrs.friction);
+          fixture.GetRestitution().should.equal(attrs.restitution);
+          fixture.IsSensor().should.equal(attrs.isSensor);
+          fixture.GetUserData().should.eql(attrs.userData);
+          return fixture.GetFilterData().should.eql(attrs.filter);
         });
-      });
-      describe(".detach(obj)", function() {
-        return it("should stop following the rectangle", function() {
-          var amount, attrs, follower;
+        return it("should also allow setting properties without x and y", function() {
+          var attrs, fixture;
           attrs = {
-            x: 200,
-            y: 200,
-            w: 50,
-            h: 50
+            friction: 0.5,
+            restitution: 0.2,
+            isSensor: true,
+            userData: ent,
+            filter: {
+              categoryBits: 0x0001,
+              maskBits: 0x0001,
+              groupIndex: 0
+            }
           };
-          follower = Crafty.e("Box2D").attr(attrs);
-          amount = 30;
-          rectangle.attach(follower).move("n", amount);
-          follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
-          rectangle.detach(follower).move("n", amount);
-          return follower.isAt(attrs.x, attrs.y - amount).should.be["true"];
+          ent.rectangle(30, 15, attrs);
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(attrs.friction);
+          fixture.GetRestitution().should.equal(attrs.restitution);
+          fixture.IsSensor().should.equal(attrs.isSensor);
+          fixture.GetUserData().should.eql(attrs.userData);
+          return fixture.GetFilterData().should.eql(attrs.filter);
         });
       });
-      describe(".origin(x, y)", function() {});
-      describe(".flip(dir)", function() {});
-      return describe(".rotate(e)", function() {});
-    });
-    describe("creation helpers (.circle, .rectangle, ...)", function() {
-      return it("should ignore when @body is not defined", function() {
-        var ent;
-        ent = Crafty.e("Box2D").circle(10);
-        should.not.exist(ent.body);
-        ent.rectangle(10, 15);
-        return should.not.exist(ent.body);
-      });
-    });
-    return describe("Collision", function() {
-      it("should store entity's id to body's user data", function() {
-        var ent;
-        ent = Crafty.e("Box2D").attr({
-          x: 30,
-          y: 30,
-          r: 30
+      describe("circle", function() {
+        it("should create the body", function() {
+          return should.exist(ent.circle(10).body);
         });
-        return ent.body.GetUserData().should.equal(ent[0]);
+        it("should use entity's position if any to create body", function() {
+          var pos;
+          ent.attr({
+            x: 10,
+            y: 10
+          });
+          ent.circle(15);
+          should.exist(ent.body);
+          pos = ent.body.GetPosition();
+          pos.x.should.equal(ent.x / SCALE);
+          return pos.y.should.equal(ent.y / SCALE);
+        });
+        it("should set to 0,0 if no entity's position", function() {
+          var pos;
+          ent.circle(15);
+          should.exist(ent.body);
+          pos = ent.body.GetPosition();
+          pos.x.should.equal(0);
+          return pos.y.should.equal(0);
+        });
+        it("should set entity's x and y if no body", function() {
+          ent.circle(15, 10, 10);
+          ent.x.should.equal(10);
+          return ent.y.should.equal(10);
+        });
+        it("should take a radius and make a circle shape", function() {
+          var r, shape;
+          r = 30;
+          ent.circle(r);
+          shape = ent.body.GetFixtureList().GetShape();
+          shape.should.be.an["instanceof"](b2CircleShape);
+          return shape.GetRadius().should.equal(r / SCALE);
+        });
+        it("should set width and height of entity", function() {
+          var r;
+          r = 30;
+          ent.circle(r);
+          ent.w.should.equal(r * 2);
+          return ent.h.should.equal(r * 2);
+        });
+        it("should have its local position at its center", function() {
+          var localPosition, r;
+          r = 30;
+          ent.circle(r);
+          localPosition = ent.body.GetFixtureList().GetShape().GetLocalPosition();
+          localPosition.x.should.equal((ent.x + r) / SCALE);
+          return localPosition.y.should.equal((ent.y + r) / SCALE);
+        });
+        it("should allow setting density property", function() {
+          var density, fixture;
+          density = 1.0;
+          ent.circle(30, 10, 10, {
+            density: density
+          });
+          fixture = ent.body.GetFixtureList();
+          return fixture.GetDensity().should.equal(density);
+        });
+        it("should allow setting any other properties", function() {
+          var attrs, fixture;
+          attrs = {
+            friction: 0.5,
+            restitution: 0.2,
+            isSensor: true,
+            userData: ent,
+            filter: {
+              categoryBits: 0x0001,
+              maskBits: 0x0001,
+              groupIndex: 0
+            }
+          };
+          ent.circle(30, 10, 10, attrs);
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(attrs.friction);
+          fixture.GetRestitution().should.equal(attrs.restitution);
+          fixture.IsSensor().should.equal(attrs.isSensor);
+          fixture.GetUserData().should.eql(attrs.userData);
+          return fixture.GetFilterData().should.eql(attrs.filter);
+        });
+        return it("should also allow setting properties without x and y", function() {
+          var attrs, fixture;
+          attrs = {
+            friction: 0.5,
+            restitution: 0.2,
+            isSensor: true,
+            userData: ent,
+            filter: {
+              categoryBits: 0x0001,
+              maskBits: 0x0001,
+              groupIndex: 0
+            }
+          };
+          ent.circle(30, attrs);
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(attrs.friction);
+          fixture.GetRestitution().should.equal(attrs.restitution);
+          fixture.IsSensor().should.equal(attrs.isSensor);
+          fixture.GetUserData().should.eql(attrs.userData);
+          return fixture.GetFilterData().should.eql(attrs.filter);
+        });
       });
-      return describe(".onHit(compopent, beginContact, endContact)", function() {
-        return it("should only check with other Box2D entity", function() {
-          var ent;
-          return ent = Crafty.e("Box2D").attr({
-            x: 30,
-            y: 30,
-            r: 30
+      describe("polygon", function() {
+        it("should create the body", function() {
+          return should.exist(ent.polygon([[30, 30], [60, 60], [0, 0]]).body);
+        });
+        it("should take an array of points in clockwise order by default", function() {
+          /*
+                     --->
+                      __
+                    x/  |
+                    |___|
+          */
+
+          var i, points, shape, v, vertices, _i, _len, _results;
+          points = [[0, 30], [30, 0], [60, 0], [60, 60], [0, 60]];
+          ent.polygon(points);
+          shape = ent.body.GetFixtureList().GetShape();
+          shape.should.be.an["instanceof"](b2PolygonShape);
+          shape.GetVertexCount().should.equal(points.length);
+          vertices = shape.GetVertices();
+          _results = [];
+          for (i = _i = 0, _len = vertices.length; _i < _len; i = ++_i) {
+            v = vertices[i];
+            v.x.should.equal(points[i][0] / SCALE);
+            _results.push(v.y.should.equal(points[i][1] / SCALE));
+          }
+          return _results;
+        });
+        it("should also take an array of points in anti-clockwise order", function() {
+          /*
+                       __
+                  |  x/  |
+                  V  |___|
+          
+                  By default, Box2D will draw, but it won't collide.
+                  As long as the points forming a convex polygon,
+                  reorder to be clock-wise.
+          */
+
+          var i, points, shape, v, vertices, _i, _len, _results;
+          points = [[0, 30], [0, 60], [60, 60], [60, 0], [30, 0]];
+          ent.polygon(points);
+          shape = ent.body.GetFixtureList().GetShape();
+          shape.should.be.an["instanceof"](b2PolygonShape);
+          shape.GetVertexCount().should.equal(points.length);
+          vertices = shape.GetVertices();
+          points = [[0, 30], [30, 0], [60, 0], [60, 60], [0, 60]];
+          _results = [];
+          for (i = _i = 0, _len = vertices.length; _i < _len; i = ++_i) {
+            v = vertices[i];
+            v.x.should.equal(points[i][0] / SCALE);
+            _results.push(v.y.should.equal(points[i][1] / SCALE));
+          }
+          return _results;
+        });
+        it("should also take arbitrary order of points", function() {
+          /*
+                        /|
+                     __/ |
+                    | /\ | 
+                    |/  \|
+          
+                  By default, Box2D will draw, but it won't collide correctly.
+                  The middle point will be ignored. It will become like this:
+          
+                       / | 
+                     /   |
+                    |    | 
+                    |____|
+          */
+
+          var i, points, shape, v, vertices, _i, _len, _results;
+          points = [[0, 30], [0, 60], [30, 0], [30, 60], [15, 30]];
+          ent.polygon(points);
+          shape = ent.body.GetFixtureList().GetShape();
+          shape.should.be.an["instanceof"](b2PolygonShape);
+          points = [[0, 30], [30, 0], [30, 60], [0, 60]];
+          shape.GetVertexCount().should.equal(points.length);
+          vertices = shape.GetVertices();
+          _results = [];
+          for (i = _i = 0, _len = vertices.length; _i < _len; i = ++_i) {
+            v = vertices[i];
+            v.x.should.equal(points[i][0] / SCALE);
+            _results.push(v.y.should.equal(points[i][1] / SCALE));
+          }
+          return _results;
+        });
+        describe("with minimal area enclosing rectangle", function() {
+          var getMiddlePoint, getSide, maer, rotate;
+          rotate = function(point, rad, origin) {
+            var offX, offY, result;
+            result = [];
+            offX = point[0] - origin[0];
+            offY = point[1] - origin[1];
+            result[0] = Math.cos(rad) * offX - Math.sin(rad) * offY + origin[0];
+            result[1] = Math.sin(rad) * offX + Math.cos(rad) * offY + origin[1];
+            return result;
+          };
+          getMiddlePoint = function(i, a) {
+            return [(a[(i + 1) % a.length][0] - a[i][0]) / 2 + a[i][0], (a[(i + 1) % a.length][1] - a[i][1]) / 2 + a[i][1]];
+          };
+          getSide = function(i, a) {
+            var d;
+            d = Crafty.math.distance;
+            return Math.round(d(a[i][0], a[i][1], a[(i + 1) % a.length][0], a[(i + 1) % a.length][1]));
+          };
+          maer = {};
+          beforeEach(function() {
+            var aabb, h, i, origin, point, rotation, sides, w, x, y;
+            x = 60;
+            y = 60;
+            w = 60;
+            h = 30;
+            rotation = -Math.PI / 4;
+            aabb = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+            origin = [x + (w / 2), y + (h / 2)];
+            /* Rotate the AABB around its origin
+            */
+
+            maer.vertices = (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = aabb.length; _i < _len; _i++) {
+                point = aabb[_i];
+                _results.push(rotate(point, rotation, origin));
+              }
+              return _results;
+            })();
+            maer.w = w;
+            maer.h = h;
+            return sides = (function() {
+              var _i, _len, _results;
+              _results = [];
+              for (i = _i = 0, _len = maer.length; _i < _len; i = ++_i) {
+                point = maer[i];
+                _results.push(getSide(i, maer));
+              }
+              return _results;
+            })();
+          });
+          it("should set width and height of entity for polygon same as MAER", function() {
+            /*          
+            The simplest polygon enclosed by the MAER is the MAER itself
+            */
+
+            var points;
+            ent.w.should.equal(0);
+            ent.h.should.equal(0);
+            points = maer.vertices;
+            ent.polygon(points);
+            ent.w.should.equal(maer.w);
+            return ent.h.should.equal(maer.h);
+          });
+          it("should set entity's x and y after calculating the polygon");
+          return it("should also reset entity's x and y when MAER is not MBR", function() {
+            /*
+                         --->
+                           ___
+                          /   \
+                        x/     \
+                          \    /
+                            \ /
+                      
+                      Since Crafty's entity uses x, y as top-left corner, need to
+                      reset it based on the MAER. In this case, the MAER is not 
+                      the same as MBR, and thus the x, y are different.
+            */
+
+            var points;
+            ent.x.should.equal(0);
+            ent.y.should.equal(0);
+            points = [[0, 30], [30, 0], [60, 0], [90, 30], [60, 60]];
+            ent.polygon(points);
+            ent.x.should.not.equal(0);
+            return ent.y.should.not.equal(0);
           });
         });
+        it("should have the x and y as the least rotating point from AABB");
+        return it("should break concave-forming points into convex fixtures");
+      });
+      return describe("mix and match", function() {
+        /*
+              The order of fixtures in body is LIFO
+        */
+        it("should have many shapes of same fixture", function() {
+          var fixture;
+          ent.rectangle(10, 10);
+          fixture = ent.body.GetFixtureList();
+          should.exist(fixture);
+          fixture.GetShape().should.be.an["instanceof"](b2PolygonShape);
+          should.not.exist(fixture.GetNext());
+          ent.rectangle(15, 15);
+          fixture = ent.body.GetFixtureList();
+          should.exist(fixture);
+          fixture.GetShape().should.be.an["instanceof"](b2PolygonShape);
+          fixture = fixture.GetNext();
+          should.exist(fixture);
+          return fixture.GetShape().should.be.an["instanceof"](b2PolygonShape);
+        });
+        it("should have many shapes of different fixture", function() {
+          var fixture;
+          ent.rectangle(10, 10);
+          fixture = ent.body.GetFixtureList();
+          should.exist(fixture);
+          fixture.GetShape().should.be.an["instanceof"](b2PolygonShape);
+          should.not.exist(fixture.GetNext());
+          ent.circle(15);
+          fixture = ent.body.GetFixtureList();
+          should.exist(fixture);
+          fixture.GetShape().should.be.an["instanceof"](b2CircleShape);
+          fixture = fixture.GetNext();
+          should.exist(fixture);
+          return fixture.GetShape().should.be.an["instanceof"](b2PolygonShape);
+        });
+        it("should not reset entity's x and y when body exist", function() {
+          ent.rectangle(10, 10, 15, 15);
+          ent.rectangle(10, 10, 30, 30);
+          ent.x.should.equal(15);
+          return ent.y.should.equal(15);
+        });
+        return it("should have different shapes with different properties", function() {
+          var density, fixture, friction, isSensor, newDensity;
+          friction = 0.5;
+          density = 0.2;
+          isSensor = true;
+          ent.rectangle(10, 10, {
+            friction: friction,
+            density: density
+          });
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(friction);
+          fixture.GetDensity().should.equal(density);
+          fixture.IsSensor().should.not.be.ok;
+          newDensity = 0.7;
+          ent.circle(10, {
+            density: newDensity,
+            isSensor: isSensor
+          });
+          fixture = ent.body.GetFixtureList();
+          fixture.GetFriction().should.equal(friction);
+          fixture.GetDensity().should.equal(newDensity);
+          return fixture.IsSensor().should.be.ok;
+        });
       });
     });
+    describe("setting body attributes", function() {
+      var SCALE, ent;
+      SCALE = null;
+      ent = null;
+      before(function() {
+        Crafty.Box2D.init();
+        return SCALE = Crafty.Box2D.SCALE;
+      });
+      beforeEach(function() {
+        return ent = Crafty.e("Box2D").rectangle(10, 10);
+      });
+      it("could check the body type", function() {
+        ent.bodyType().should.equal("static");
+        return ent.body.GetType().should.equal(b2Body.b2_staticBody);
+      });
+      it("could change type", function() {
+        ent.bodyType("dynamic");
+        ent.body.GetType().should.equal(b2Body.b2_dynamicBody);
+        return ent.bodyType().should.equal("dynamic");
+      });
+      return it("should not change to invalid type", function() {
+        var type;
+        type = ent.bodyType();
+        return ent.bodyType("something_weird").bodyType().should.equal(type);
+      });
+    });
+    return describe("apply setting to all fixtures", function() {});
+    /*describe "2D Component", ->
+      rectangle = null
+      circle = null
+      recAttrs = {x:100, y: 100, w:50, h: 50}
+      cirAttrs = {x:100, y: 100, r:50}
+      SCALE = 0
+    
+      beforeEach ->
+        rectangle = Crafty.e("Box2D").attr recAttrs
+        circle = Crafty.e("Box2D").attr cirAttrs
+        SCALE = Crafty.Box2D.SCALE
+    
+      describe ".area()", ->
+        it "should return w * h for rectangle", ->
+          rectangle.area().should.equal recAttrs.w*recAttrs.h
+        it "should return PI*r", ->
+          circle.area().should.equal cirAttrs.r*Math.PI
+    
+      describe ".intersect(x, y, w, h)", ->
+        it "should intesect with (100, 100, 50, 50) for rectangle", ->
+          rectangle.intersect(100, 100, 50, 50).should.be.true
+        it "should not intesect with (0, 0, 100, 100) for rectangle", ->
+          rectangle.intersect(0, 0, 100, 100).should.be.false
+    
+      describe ".within(x, y, w, h)", ->
+      describe ".contains(x, y, w, h)", ->
+      describe ".pos()", ->
+      describe ".mbr()", ->
+      describe ".isAt(x, y) #used for below tests", ->
+        it "should check for both 2D and Box2D", ->
+          # This test would ensure the usage of isAt will cover Box2D also
+          # Any tests below using .isAt will not need to check for both.
+          rectangle.isAt(recAttrs.x, recAttrs.y).should.be.true
+          rectangle.body.GetPosition().x.should.equal (recAttrs.x)/SCALE
+          rectangle.body.GetPosition().y.should.equal (recAttrs.y)/SCALE
+    
+      describe ".move(dir, by)", ->
+        it "should has x and y at the specified location", ->
+          amount = 10
+          rectangle.move("n", amount)
+                    .isAt(recAttrs.x, recAttrs.y - amount)
+                    .should.be.true
+          rectangle.move("s", amount)
+                    .isAt(recAttrs.x, recAttrs.y)
+                    .should.be.true
+          rectangle.move("e", amount)
+                    .isAt(recAttrs.x+amount, recAttrs.y)
+                    .should.be.true
+          rectangle.move("w", amount)
+                    .isAt(recAttrs.x, recAttrs.y)
+                    .should.be.true
+    
+      describe ".shift(x, y, w, h)", ->
+        it "should move the entity by an amount in specified direction", ->
+          rectangle.shift(10)
+                    .isAt(recAttrs.x+10, recAttrs.y)
+                    .should.be.true
+    
+          rectangle.shift(-10)
+                    .isAt(recAttrs.x, recAttrs.y)
+                    .should.be.true
+    
+          rectangle.shift(-10,10)
+                    .isAt(recAttrs.x-10, recAttrs.y+10)
+                    .should.be.true
+    
+        it "should change width and/or height for rectangle", ->
+          rectangle.shift(0,0,10).w.should.equal recAttrs.w+10
+    
+          # There is no scaling with Box2D, so to scale, we have to
+          # remove the initial shape, then add a new one.
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+          w = (recAttrs.w + 10) / SCALE
+          h = recAttrs.h / SCALE
+          # Note: vertices are in local cordinates
+          vertices[0].should.eql {x: 0, y: 0}
+          vertices[1].should.eql {x: w, y: 0}
+          vertices[2].should.eql {x: w, y: h}
+          vertices[3].should.eql {x: 0, y: h}
+    
+          rectangle.shift(0,0,-10).w.should.equal recAttrs.w
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+          w = (recAttrs.w) / SCALE
+          h = recAttrs.h / SCALE
+          # Note: vertices are in local cordinates
+          vertices[0].should.eql {x: 0, y: 0}
+          vertices[1].should.eql {x: w, y: 0}
+          vertices[2].should.eql {x: w, y: h}
+          vertices[3].should.eql {x: 0, y: h}
+    
+          rectangle.shift(0,0,-10, 10).w.should.equal recAttrs.w-10
+          rectangle.h.should.equal recAttrs.h+10
+          vertices = rectangle.body.GetFixtureList().GetShape().GetVertices()
+          w = (recAttrs.w - 10) / SCALE
+          h = (recAttrs.h + 10) / SCALE
+          # Note: vertices are in local cordinates
+          vertices[0].should.eql {x: 0, y: 0}
+          vertices[1].should.eql {x: w, y: 0}
+          vertices[2].should.eql {x: w, y: h}
+          vertices[3].should.eql {x: 0, y: h}
+    
+        it "should change radius for circle", ->
+          circle.shift(0,0,30).r.should.equal cirAttrs.r+30
+          # @w will become 100+30, @h is still 100
+          # Received attr = {_w: 100, _h: 100}
+          circle.body.GetFixtureList().GetShape().GetRadius()
+                      .should.equal (cirAttrs.r+30)/SCALE
+    
+        it "should only shift the third param for radius", ->
+          circle.shift(0,0,30,60).r.should.equal cirAttrs.r+30
+          # Both events for w and h will be fired.
+          # First is  {_w: 100, _h: 100} (@w = 130, @h=100) 
+          # Then {_w: 130, _h: 100} (@w = 130, @h=160)
+          circle.body.GetFixtureList().GetShape().GetRadius()
+                      .should.equal (cirAttrs.r+30)/SCALE
+    
+          # Never care about the third param
+          circle.shift(0,0,0,60).r.should.equal cirAttrs.r+30
+          circle.body.GetFixtureList().GetShape().GetRadius()
+                      .should.equal (cirAttrs.r+30)/SCALE
+    
+        it "should set new width and height for circle", ->
+          circle.shift(0,0,30).w.should.equal (cirAttrs.r+30)*2
+          circle.h.should.equal (cirAttrs.r+30)*2
+    
+        it "should not set new width and height for circle when no third param", ->
+          circle.shift(0,0,0,30).w.should.equal cirAttrs.r*2
+          circle.h.should.equal cirAttrs.r*2
+    
+      describe ".attach(Entity obj[, .., Entity objN])", ->
+        it "should move the follower", ->
+          attrs = {x:200, y: 200, w:50, h: 50}
+          follower = Crafty.e("Box2D").attr(attrs)
+          amount = 30
+    
+          rectangle.attach(follower).move("n", amount)
+          follower.isAt(attrs.x, attrs.y - amount).should.be.true
+    
+      describe ".detach(obj)", ->
+        it "should stop following the rectangle", ->
+          attrs = {x:200, y: 200, w:50, h: 50}
+          follower = Crafty.e("Box2D").attr(attrs)
+          amount = 30
+    
+          rectangle.attach(follower).move("n", amount)
+          follower.isAt(attrs.x, attrs.y - amount).should.be.true
+    
+          rectangle.detach(follower).move("n", amount)
+          follower.isAt(attrs.x, attrs.y - amount).should.be.true
+    
+      describe ".origin(x, y)", ->
+      describe ".flip(dir)", ->
+      describe ".rotate(e)", ->
+    */
+
   });
 
 }).call(this);
