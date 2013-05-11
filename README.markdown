@@ -1,3 +1,7 @@
+# Not Maintained
+
+Due to switching mostly to server-side, I cannot maintain the development environment fo this project any more.
+
 # CraftyBox 
 
 Here are some components I am working on to help using Box2D in Crafty.js ([web](http://craftyjs.com/) | [github](https://github.com/craftyjs/Crafty)) engine.
