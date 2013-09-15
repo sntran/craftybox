@@ -115,16 +115,21 @@
         this.bind("EnterFrame", function() {
           var angle, pos;
           if ((_this.body != null) && _this.body.IsAwake()) {
+            var rounded_x, rounded_y, rounded_angle;
             pos = _this.body.GetPosition();
             angle = Crafty.math.radToDeg(_this.body.GetAngle());
-            if (pos.x * SCALE !== _this.x) {
-              _this.x = pos.x * SCALE;
+            rounded_x = Math.round(pos.x * SCALE);
+            rounded_y = Math.round(pos.y * SCALE);
+            rounded_angle = Math.round(angle);
+            
+            if (rounded_x !== _this.x) {
+              _this.x = rounded_x;
             }
-            if (pos.y * SCALE !== _this.y) {
-              _this.y = pos.y * SCALE;
+            if (rounded_y !== _this.y) {
+              _this.y = rounded_y;
             }
-            if (angle !== _this.rotation) {
-              return _this.rotation = angle;
+            if (rounded_angle !== _this.rotation) {
+              return _this.rotation = rounded_angle;
             }
           }
         });
