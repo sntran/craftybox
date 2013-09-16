@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>CraftyBox Example - Mouse</title>
-	 
+	
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 
 	<script src="../lib/1.jquery.min.js"></script>
@@ -27,19 +27,29 @@ window.onload = function() {
 	Crafty.Box2D.debug = true;
 	
 	Crafty.e("Box2D")
-				.attr({x:0*30, y:0*30, w: 20*30, h: 1*30, name: "roof"}); // roof
+				.attr({x:0*30, y:0*30, name: "roof"})
+				.rectangle(20*30, 1*30)
+				.bodyType("static"); // roof
 	Crafty.e("Box2D")
-				.attr({x:0*30, y:15*30, w: 20*30, h: 1*30, name: "floor"}); // ground
+				.attr({x:0*30, y:15*30, name: "floor"})
+				.rectangle(20*30, 1*30)
+				.bodyType("static");// ground
 	Crafty.e("Box2D")
-				.attr({x:0*30, y:1*30, w: 1*30, h: 14*30, name: "left"}); // left
+				.attr({x:0*30, y:1*30, name: "left"})
+				.rectangle(1*30, 14*30)
+				.bodyType("static");// left
 	Crafty.e("Box2D")
-				.attr({x:19*30, y:1*30, w: 1*30, h: 14*30, name: "right"}); // right
+				.attr({x:19*30, y:1*30, name: "right"})
+				.rectangle(1*30, 14*30)
+				.bodyType("static");// right
 
 	var gravityY = 10
 
 	// Create ball
 	var ent = Crafty.e("Box2D, Draggable")
-				.attr({x:9*30, y:2*30, r:1*30, type: "dynamic"})
+				.attr({x:9*30, y:2*30})
+				.circle(1*30)
+				.bodyType("dynamic");
 	
 	// Set callbacks for .onHit to show on the input boxes
 	ent.onHit("Box2D", function(hitData) {
@@ -54,6 +64,7 @@ window.onload = function() {
 	// Use .hit to check they return the same value
 	ent.bind("EnterFrame", function() {
 		var hitData = ent.hit("Box2D");
+		console.log(this.body);
 		if (hitData) {
 			var data = hitData[0];
 			$("#hit").val(data.obj.name);
