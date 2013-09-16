@@ -36,15 +36,19 @@ Crafty.c "Box2D", do ->
     _fixDef = new b2FixtureDef if not _fixDef?
 
     if attrs?
-      _fixDef.density = attrs.density if attrs.density?
-      _fixDef.friction = attrs.friction if attrs.friction?
+      _fixDef.density = if attrs.density? then attrs.density else 1
+      _fixDef.friction = if attrs.friction? then attrs.friction else 0.5
+      _fixDef.restitution = if attrs.restitution? then attrs.restitution else 0.2
       _fixDef.isSensor = attrs.isSensor if attrs.isSensor?
-      _fixDef.restitution = attrs.restitution if attrs.restitution?
       _fixDef.userData = attrs.userData if attrs.userData?
       _fixDef.filter.categoryBits = attrs.filter.categoryBits if attrs.filter?.categoryBits?
       _fixDef.filter.groupIndex = attrs.filter.groupIndex if attrs.filter?.groupIndex?
       _fixDef.filter.maskBits = attrs.filter.maskBits if attrs.filter?.maskBits?
-
+    else
+      _fixDef.density = 1
+      _fixDef.friction = 0.5
+      _fixDef.restitution = 0.2
+	  
     _fixDef.shape = shape
     _body.CreateFixture _fixDef
 
@@ -82,10 +86,9 @@ Crafty.c "Box2D", do ->
       if @body? and @body.IsAwake()
         pos = @body.GetPosition()
         angle = Crafty.math.radToDeg @body.GetAngle()
-
-        @x = pos.x*SCALE if pos.x*SCALE isnt @x
-        @y = pos.y*SCALE if pos.y*SCALE isnt @y
-        @rotation = angle if angle isnt @rotation
+        @x = Math.round pos.x*SCALE
+        @y = Math.round pos.y*SCALE
+        @rotation = Math.round angle
 
     ###
     Add this body to a list to be destroyed on the next step.

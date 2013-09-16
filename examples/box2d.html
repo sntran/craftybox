@@ -26,21 +26,22 @@ window.onload = function() {
 	Crafty.Box2D.debug = true;
 	// Create ground
 	Crafty.e("Box2D, Canvas, Color, Draggable")
-				.attr({x:0*30, y:13*30, w: 10*2*30, h: 0.5*2*30})
+				.rectangle(10*2*30, 0.5*2*30, 0*30, 13*30)
 				.color(STATIC);
 			
 	for(var i = 0; i < 10; ++i) {
 		(function() {
 			var x = (Math.random() * 10)*30;
 			var y = (Math.random() * 10)*30;
-			//var components = "Box2D, Canvas, Color";
+
 			var components = "Box2D, Canvas";
 
 			if(Math.random() > 0.5) {
 				var hW = (Math.random() + 0.1)*30;
 				var hH = (Math.random() + 0.1)*30;
 				var ent = Crafty.e(components)
-							.attr({x:x, y:y, w: hW*2, h: hH*2, type: "dynamic"});
+							.rectangle(hW*2, hH*2, x, y)
+							.bodyType("dynamic");
 
 				// Simulate Box2D's debugDraw
 				ent.ready = true;
@@ -52,7 +53,8 @@ window.onload = function() {
 			} else {
 				var r = (Math.random() + 0.1)*30;
 				var ent = Crafty.e(components)
-							.attr({x:x, y:y, r:r, type: "dynamic"});
+							.circle(r, x, y)
+							.bodyType("dynamic");
 
 				// Simulate Box2D's debugDraw
 				ent.ready = true;	
